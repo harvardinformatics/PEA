@@ -29,6 +29,7 @@ midCol=int(int(sys.argv[3])+(int(sys.argv[2])))
 endCol=midCol+int(sys.argv[4])
 reps=int(sys.argv[2])
 reps2=int(sys.argv[4])
+name=sys.argv[5].split('.')[0]
 
 fileName=sys.argv[1]
 
@@ -88,7 +89,7 @@ def blankDecider(pmatrix, bmatrix, imatrix):
 
 def writeFile(infile, currData, annotData):
 	cData = currData.tolist()
-	fn = os.path.splitext(infile)[0] + '_Imputed_RegImpute.csv'
+	fn = name + '_Imputed_RegImpute.csv'
 	with open(fn, 'w', newline="") as myfile:
 	    outputFile = csv.writer(myfile)
 	    outputFile.writerow(firstRow)

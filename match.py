@@ -9,6 +9,7 @@ psmfile=sys.argv[1]
 protfile=sys.argv[2]
 psmAccIndex=int(sys.argv[3])
 protAccIndex=int(sys.argv[4])
+name=sys.argv[5].split('.')[0]
 
 def readFilePSM(infile):
 	fn = infile
@@ -52,7 +53,7 @@ def match(dat, pd, psmAcc, protAcc):
 
 
 def writeFile(infile, currData):
-	fn = os.path.splitext(infile)[0] + '_PDfilters.csv'
+	fn = name + '_PDfilters.csv'
 	with open(fn, 'w', newline="") as myfile:
 	    outputFile = csv.writer(myfile)
 	    outputFile.writerow(firstRow)

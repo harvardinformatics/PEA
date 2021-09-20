@@ -23,34 +23,34 @@ library(mwshiny)
 library(dplyr)
 shinyServer(function(input, output, session) {
     observeEvent(input$runimputation1, {
-      impute.df <- read.csv(input$psmfilename, header=TRUE)
+      impute.df <- read.csv(input$psmfilename$datapath, header=TRUE)
       startAbundance <- as.integer(grep(paste(input$abundancecolumn,"$",sep=''), colnames(impute.df)))-1
      
-      system(paste("python3 missForest_model.py ", input$psmfilename, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2, wait=FALSE))
+      system(paste("python3 missForest_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2,  " ", input$psmfilename$name, wait=FALSE))
       
     })
     observeEvent(input$runimputation2, {
-      impute.df <- read.csv(input$psmfilename, header=TRUE)
+      impute.df <- read.csv(input$psmfilename$datapath, header=TRUE)
       startAbundance <- as.integer(grep(paste(input$abundancecolumn,"$",sep=''), colnames(impute.df)))-1
       
-      system(paste("python3 KNN_model.py ", input$psmfilename, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2, wait=FALSE))
+      system(paste("python3 KNN_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2, " ", input$psmfilename$name, wait=FALSE))
       
     })
     observeEvent(input$runimputation3, {
-      impute.df <- read.csv(input$psmfilename, header=TRUE)
+      impute.df <- read.csv(input$psmfilename$datapath, header=TRUE)
       startAbundance <- as.integer(grep(paste(input$abundancecolumn,"$",sep=''), colnames(impute.df)))-1
       
-      system(paste("python3 RegImpute_model.py ", input$psmfilename, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2, wait=FALSE))
+      system(paste("python3 RegImpute_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2, " ", input$psmfilename$name,  wait=FALSE))
       
     })
     observeEvent(input$runPDfilter, {
       
-      psmfile.df <- read.csv(input$PSMfile, header=TRUE)
-      protfile.df <- read.csv(input$Protfile, header=TRUE)
+      psmfile.df <- read.csv(input$PSMfile$datapath, header=TRUE)
+      protfile.df <- read.csv(input$Protfile$datapath, header=TRUE)
       accPSM <- as.integer(grep("Master.Protein.Accessions", colnames(psmfile.df)))-1
       accProt <- as.integer(grep("Accession", colnames(protfile.df)))-1
       
-      system(paste("python3 match.py ", input$PSMfile, " ", input$Protfile, " ", accPSM, " ", accProt, wait=FALSE))
+      system(paste("python3 match.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name,  wait=FALSE))
       
     })
     dataFrame <- reactive({
