@@ -43,6 +43,24 @@ shinyServer(function(input, output, session) {
       system(paste("python3 RegImpute_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2, " ", input$psmfilename$name,  wait=FALSE))
       
     })
+    missForestMV <- reactive({
+      switch(input$mvOptions,
+             "missForest" = read.csv("Imputed_missForest.csv"),
+             "KNN" = read.csv("Imputed_KNN.csv"),
+             "RegImpute" = read.csv("Imputed_RegImpute.csv"))
+    })
+    
+    output$table <- renderTable({
+      head(missForestMV(),10)
+    })
+    output$downloadData <- downloadHandler(
+      filename = function() {
+        paste(input$mvOptions, ".csv", sep = "")
+      },
+      content = function(file) {
+        write.csv(missForestMV(), file, row.names = FALSE)
+      }
+    )
     observeEvent(input$runPDfilter, {
       
       psmfile.df <- read.csv(input$PSMfile$datapath, header=TRUE)

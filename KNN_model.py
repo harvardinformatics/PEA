@@ -84,7 +84,7 @@ def blankDecider(pmatrix, bmatrix, imatrix):
 
 def writeFile(infile, currData, annotData):
 	cData = currData.tolist()
-	fn = name + '_Imputed_KNN.csv'
+	fn = 'Imputed_KNN.csv'
 	with open(fn, 'w', newline="") as myfile:
 	    outputFile = csv.writer(myfile)
 	    outputFile.writerow(firstRow)
