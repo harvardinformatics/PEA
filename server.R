@@ -61,16 +61,54 @@ shinyServer(function(input, output, session) {
         write.csv(missForestMV(), file, row.names = FALSE)
       }
     )
-    observeEvent(input$runPDfilter, {
+    observeEvent(input$runfilter1, {
       
       psmfile.df <- read.csv(input$PSMfile$datapath, header=TRUE)
       protfile.df <- read.csv(input$Protfile$datapath, header=TRUE)
       accPSM <- as.integer(grep("Master.Protein.Accessions", colnames(psmfile.df)))-1
       accProt <- as.integer(grep("Accession", colnames(protfile.df)))-1
-      
-      system(paste("python3 match.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name,  wait=FALSE))
+      system(paste("python3 missForest_match.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name,  wait=FALSE))
+
+    })
+    
+    observeEvent(input$runfilter2, {
+      psmfile.df <- read.csv(input$PSMfile$datapath, header=TRUE)
+      protfile.df <- read.csv(input$Protfile$datapath, header=TRUE)
+      accPSM <- as.integer(grep("Master.Protein.Accessions", colnames(psmfile.df)))-1
+      accProt <- as.integer(grep("Accession", colnames(protfile.df)))-1
+      system(paste("python3 KNN_match.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name,  wait=FALSE))
       
     })
+    
+    observeEvent(input$runfilter3, {
+      psmfile.df <- read.csv(input$PSMfile$datapath, header=TRUE)
+      protfile.df <- read.csv(input$Protfile$datapath, header=TRUE)
+      accPSM <- as.integer(grep("Master.Protein.Accessions", colnames(psmfile.df)))-1
+      accProt <- as.integer(grep("Accession", colnames(protfile.df)))-1
+      system(paste("python3 RegImpute_match.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name,  wait=FALSE))
+      
+    })
+    
+    filterMV <- reactive({
+      switch(input$filterOptions,
+             "missForest_Filtered" = read.csv("Imputed_missForest_filtered.csv"),
+             "KNN_Filtered" = read.csv("Imputed_KNN_filtered.csv"),
+             "RegImpute_Filtered" = read.csv("Imputed_RegImpute_filtered.csv"))
+    })
+    
+    
+    
+    output$tableFiltered <- renderTable({
+      head(filterMV(),10)
+    })
+    output$downloadFilter <- downloadHandler(
+      filename = function() {
+        paste(input$filterOptions, ".csv", sep = "")
+      },
+      content = function(file) {
+        write.csv(filterMV(), file, row.names = FALSE)
+      }
+    )
     dataFrame <- reactive({
       #X11.options(width=5, height=5, xpos=1200, ypos=500)
       #options(editor="/usr/bin/vim")
@@ -436,7 +474,25 @@ shinyServer(function(input, output, session) {
       clicked()
     }, rownames = T)
     
+    statsAnalysis <- reactive({
+      switch(input$analysisOptions,
+             "StatsTable" = read.csv("StatsTable.csv"),
+             "StatsUpregulated" = read.csv("StatsUpregulated.csv"),
+             "StatsDownregulated" = read.csv("StatsDownregulated.csv"),
+             "ProteinMatrix" = read.csv("RawMS_ProteinMatrix.csv"))
+    })
     
+    output$analysisTable <- renderTable({
+      head(statsAnalysis(),10)
+    })
+    output$downloadAnalysis <- downloadHandler(
+      filename = function() {
+        paste(input$analysisOptions, ".csv", sep = "")
+      },
+      content = function(file) {
+        write.csv(statsAnalysis(), file, row.names = FALSE)
+      }
+    )
 
 
 })

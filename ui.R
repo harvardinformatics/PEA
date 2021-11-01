@@ -18,7 +18,13 @@ shinyUI(fluidPage(theme=shinytheme("darkly"),
                               tabPanel("Proteins.",
                                 fileInput('PSMfile', 'PSM Imputed File'),
                                 fileInput('Protfile', 'PD Protein File'),
-                                actionButton('runPDfilter', 'Use PD filters')),
+                                actionButton('runfilter1', 'Filter missForest file.'),
+                                actionButton('runfilter2', 'Filter KNN file.'),
+                                actionButton('runfilter3', 'Filter RegImpute file.'),
+                                selectInput("filterOptions", "Choose an Algorithm.", 
+                                            choices = c("missForest_Filtered", "KNN_Filtered", "RegImpute_Filtered")),
+                                downloadButton("downloadFilter", "Download"),
+                                tableOutput("tableFiltered")),
                               tabPanel("Analyze.",
                                 fileInput('csvfile', 'Input File'),
                                 fileInput('uniprotout', 'Uniprot File'),
@@ -175,7 +181,12 @@ shinyUI(fluidPage(theme=shinytheme("darkly"),
                                 sliderInput('fcCut', label="log(FC) cutoff",min=-2,max=2,value=c(-2,-2), step=0.1, width="600px"),
                                 actionButton('downloadPlot', 'Download Plot'),
                                 #here the table for the clicked points:
-                                tableOutput('clickedPoints'))
+                                tableOutput('clickedPoints')),
+                              tabPanel("Analyze.",
+                                selectInput("analysisOptions", "Choose an Analysis.", 
+                                   choices = c("StatsTable", "StatsUpregulated", "StatsDownregulated", "ProteinMatrix")),
+                                downloadButton("downloadAnalysis", "Download"),
+                                tableOutput("analysisTable"))
                   )
   )
   
