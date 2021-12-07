@@ -1,14 +1,35 @@
-FROM rocker/shiny:4.1.1
+FROM rocker/shiny-verse:4.1.1
 
-RUN apt-get update -y && apt-get install -y libssl-dev python3-pip libmagick++-dev libharfbuzz-dev libfribidi-dev libmariadbclient-dev libwebp-dev cargo libhdf5-dev libnetcdf-dev libavfilter-dev
-RUN pip3 install statsmodels missingpy sklearn==0.21.3 pandas RegImpute tkinter
-RUN R -e "install.packages('BiocManager', dependencies=TRUE, repos='https://cran.us.r-project.org')"
-RUN R -e "BiocManager::install(c('MSnbase','limma','ROTS'))"
-RUN R -e "install.packages(c('reshape','lattice','ggplot2','limma','ROTS','stringr','seqinr','ggrepel','MKmisc','gplots','gtools','magick','dplyr','shinythemes','mwshiny'), dependencies=TRUE, repos='https://cran.us.r-project.org')"
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
+  cython3 \
+  imagemagick \
+  libmagick++-dev \
+  libnetcdf-dev \
+  python3-dev \
+  python3-pip \
+  python3-statsmodels \
+  && rm -rf /var/lib/apt/lists/*
+
+# RegImpute requires scikit-learn < 0.22.0
+
+RUN pip3 install --no-cache-dir \
+  missingpy==0.2.0 \
+  RegImpute==0.0.2 \
+  scikit-learn==0.21.3
+
+RUN Rscript -e "BiocManager::install(c('MSnbase','limma','ROTS'), Ncpus=parallel::detectCores())"
+
+RUN install2.r --error --skipinstalled \
+  ggrepel \
+  gplots \
+  gtools \
+  magick \
+  MKmisc \
+  mwshiny \
+  reshape \
+  seqinr \
+  shinythemes
 
 WORKDIR /srv/shiny-server/PEA
 
-RUN chown -R shiny:shiny .
-
-CMD ["/init"]
-
+COPY --chown=shiny:shiny . .
