@@ -1,4 +1,4 @@
-options(shiny.maxRequestSize=300*1024^2) 
+options(shiny.maxRequestSize=300*1024^2)
 
 library(MSnbase)
 library(reshape)
@@ -25,23 +25,23 @@ shinyServer(function(input, output, session) {
     observeEvent(input$runimputation1, {
       impute.df <- read.csv(input$psmfilename$datapath, header=TRUE)
       startAbundance <- as.integer(grep(paste(input$abundancecolumn,"$",sep=''), colnames(impute.df)))-1
-     
+
       system(paste("python3 missForest_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2,  " ", input$psmfilename$name, wait=FALSE))
-      
+
     })
     observeEvent(input$runimputation2, {
       impute.df <- read.csv(input$psmfilename$datapath, header=TRUE)
       startAbundance <- as.integer(grep(paste(input$abundancecolumn,"$",sep=''), colnames(impute.df)))-1
-      
+
       system(paste("python3 KNN_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2, " ", input$psmfilename$name, wait=FALSE))
-      
+
     })
     observeEvent(input$runimputation3, {
       impute.df <- read.csv(input$psmfilename$datapath, header=TRUE)
       startAbundance <- as.integer(grep(paste(input$abundancecolumn,"$",sep=''), colnames(impute.df)))-1
-      
-      system(paste("python3 RegImpute_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2, " ", input$psmfilename$name,  wait=FALSE))
-      
+
+      system(paste("python3 RegImpute_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2, " ", input$psmfilename$name, wait=FALSE))
+
     })
     missForestMV <- reactive({
       switch(input$mvOptions,
@@ -49,7 +49,7 @@ shinyServer(function(input, output, session) {
              "KNN" = read.csv("Imputed_KNN.csv"),
              "RegImpute" = read.csv("Imputed_RegImpute.csv"))
     })
-    
+
     output$table <- renderTable({
       head(missForestMV(),10)
     })
@@ -62,42 +62,42 @@ shinyServer(function(input, output, session) {
       }
     )
     observeEvent(input$runfilter1, {
-      
+
       psmfile.df <- read.csv(input$PSMfile$datapath, header=TRUE)
       protfile.df <- read.csv(input$Protfile$datapath, header=TRUE)
       accPSM <- as.integer(grep("Master.Protein.Accessions", colnames(psmfile.df)))-1
       accProt <- as.integer(grep("Accession", colnames(protfile.df)))-1
-      system(paste("python3 missForest_match.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name,  wait=FALSE))
+      system(paste("python3 missForest_match.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name, wait=FALSE))
 
     })
-    
+
     observeEvent(input$runfilter2, {
       psmfile.df <- read.csv(input$PSMfile$datapath, header=TRUE)
       protfile.df <- read.csv(input$Protfile$datapath, header=TRUE)
       accPSM <- as.integer(grep("Master.Protein.Accessions", colnames(psmfile.df)))-1
       accProt <- as.integer(grep("Accession", colnames(protfile.df)))-1
-      system(paste("python3 KNN_match.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name,  wait=FALSE))
-      
+      system(paste("python3 KNN_match.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name, wait=FALSE))
+
     })
-    
+
     observeEvent(input$runfilter3, {
       psmfile.df <- read.csv(input$PSMfile$datapath, header=TRUE)
       protfile.df <- read.csv(input$Protfile$datapath, header=TRUE)
       accPSM <- as.integer(grep("Master.Protein.Accessions", colnames(psmfile.df)))-1
       accProt <- as.integer(grep("Accession", colnames(protfile.df)))-1
-      system(paste("python3 RegImpute_match.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name,  wait=FALSE))
-      
+      system(paste("python3 RegImpute_match.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name, wait=FALSE))
+
     })
-    
+
     filterMV <- reactive({
       switch(input$filterOptions,
              "missForest_Filtered" = read.csv("Imputed_missForest_filtered.csv"),
              "KNN_Filtered" = read.csv("Imputed_KNN_filtered.csv"),
              "RegImpute_Filtered" = read.csv("Imputed_RegImpute_filtered.csv"))
     })
-    
-    
-    
+
+
+
     output$tableFiltered <- renderTable({
       head(filterMV(),10)
     })
@@ -113,9 +113,9 @@ shinyServer(function(input, output, session) {
       #X11.options(width=5, height=5, xpos=1200, ypos=500)
       #options(editor="/usr/bin/vim")
       #options(stringsAsFactors=FALSE)
-      
+
       source('functions_for_proteomics_Rcode.R')
-      
+
       # LOAD DATA
       #CHANGE input file name
       inFile<-input$csvfile
@@ -126,7 +126,7 @@ shinyServer(function(input, output, session) {
       xmir5a6.df$PSMcount <- str_count(xmir5a6.df$Master.Protein.Accessions)
       xmir5a6.df <- xmir5a6.df[!(xmir5a6.df$PSMcount=='1'),]
 
-      print('printing args from R code') 
+      print('printing args from R code')
       if (!exists("args")) {
         suppressPackageStartupMessages(library("argparse"))
         parser <- ArgumentParser()
@@ -136,8 +136,8 @@ shinyServer(function(input, output, session) {
                             help="Second parameter [default %(defult)s]")
         args <- parser$parse_args()
       }
-      
-      
+
+
       # annotation
       #annotmir5a6.df <- xmir5a6.df[, c(as.integer(input$peptideCol), as.integer(input$accessionCol))]
       annotmir5a6.df <- xmir5a6.df[, c(as.integer(grep("Annotated.Sequence", colnames(xmir5a6.df))), as.integer(grep("Master.Protein.Accessions", colnames(xmir5a6.df))))]
@@ -152,7 +152,7 @@ shinyServer(function(input, output, session) {
       apply(annotmir5a6.df, 1, function(x) {
         pepseqmir5a62acc[[x[1]]] <- x[2]
       })
-      
+
       uprot1<-input$uniprotout
       if (is.null(uprot1))
         return(NULL)
@@ -169,26 +169,26 @@ shinyServer(function(input, output, session) {
       })
       # cntl.v <- gsub(", ", "|", input$controlchannels)
       # trt.v <- gsub(", ", "|", input$treatmentchannels)
-      # 
-      # matchesCntl <- unique(grep(cntl.v, 
+      #
+      # matchesCntl <- unique(grep(cntl.v,
       #                        colnames(xmir5a6.df), value=TRUE))
-      # matchesTrt <- unique(grep(trt.v, 
+      # matchesTrt <- unique(grep(trt.v,
       #                            colnames(xmir5a6.df), value=TRUE))
       # abu.m <- c(matchesCntl, matchesTrt)
-      # 
+      #
       # abunum.m <- which(colnames(xmir5a6.df) %in% abu.m)
-      
-      matchesAb <- unique(grep('Abundance', 
+
+      matchesAb <- unique(grep('Abundance',
                                 colnames(xmir5a6.df), value=TRUE))
-      
+
       abunum.v <- which(colnames(xmir5a6.df) %in% matchesAb)
-      
-      
+
+
       isolint <- as.integer(grep("^Isolation.Interference", colnames(xmir5a6.df)))
       outfile <- input$outputfile
       pcaCtl <- input$pcacontrol
       pcaTreat <- input$pcatreatment
-    
+
       #CHANGE df, peptix, fileIDix, isolinterfix, lessperc, startix, endix
       #isolinterfix, Isolation Interference [%] column
       #lessperc, is float for setting coisolation interference threshold (i.e. default 70.0)
@@ -198,12 +198,12 @@ shinyServer(function(input, output, session) {
       ymir5a6.lst <- separate_PDPSM(mir5a6.df, 2)
       #write.table(ymir5a6.lst, "ymir5a6_matrix.csv", sep=",")
       xmir5a6.lst <- rmAnyMissing(ymir5a6.lst)
-      
+
       #xmir5a6.lst <- xmir5a6.lst[paste('F1', seq(20), sep='.')]
-      
+
       # add protein column
       mir5a6.lst <- lapply(xmir5a6.lst, function(df) {
-        rownames(df) <- make.unique(df$PepSeq, sep=';')    
+        rownames(df) <- make.unique(df$PepSeq, sep=';')
         df$Prot <- as.character(unlist(mget(df$PepSeq, pepseqmir5a62acc, ifnotfound=NA)))
         df <- df[!is.na(df$Prot), ]
         df <- df[-1]
@@ -212,10 +212,10 @@ shinyServer(function(input, output, session) {
         df <- df[o, ]
         return(df)
       })
-      
+
       mir5a6.lst <- lapply(mir5a6.lst, function(df) {
         colnames(df)  <- sub('F.*_', 'F_', colnames(df))
-       
+
         return(df)
       })
       #write.table(xresmir5a6.df, "xresmir5a6_shinyapp_matrix.csv", sep=",")
@@ -229,27 +229,27 @@ shinyServer(function(input, output, session) {
         xx<-ncol(resmir5a6.df)
         prot_matrix <- resmir5a6.df[, 2:xx]
         norm_prot <- subset(resmir5a6.df, resmir5a6.df$Prot == input$protnorm)
-       
+
         np <- norm_prot[2:xx]
         resmir5a6.df[, 2:xx] <- mapply('/', prot_matrix, np)
-        
-        
+
+
       }
-      
+
       #write.table(resmir5a6.df, "resmir5a6_shinyapp_matrix.csv", sep=",")
       # MAKE MSnbase OBJECT
       prepBlkAnnot <- function(df, suff) {
         adf <- df
         adf <- adf[order(adf$Prot, decreasing=FALSE), ]
-        
+
         fdf <- data.frame(ID=adf$Prot, Acc=adf$Prot)
         rownames(fdf) <- fdf$ID
-        
+
         rownames(adf) <- adf$Prot
         bm <- adf[-1]
         bm[colnames(bm)] <- sapply(bm[colnames(bm)], as.numeric)
         bm <- as.matrix(bm)
-        
+
         bm.cnames <- sapply(colnames(bm), function(x) {
           if (grepl('126', x)) {
             x <- paste(x, as.integer(input$channel126), sep=',')
@@ -285,28 +285,28 @@ shinyServer(function(input, output, session) {
             x <- paste(x, as.integer(input$channel134N), sep=',')
           } else if (grepl('134C', x)) {
             x <- paste(x, as.integer(input$channel134C), sep=',')
-          } 
+          }
         })
         write.table(bm.cnames, file=paste('pData_', suff, '.txt', sep=''), col.names=paste('TreatmentGroup', sep=','),
                     row.names=FALSE, quote=FALSE)
-        
+
         return(list(bm, fdf))
       }
-      
+
       makeBlkMSS <- function(lst, suff) {
         pd <- read.csv(paste('pData_', suff, '.txt', sep=''))
         mss <- MSnSet(lst[[1]], lst[[2]], pd)
         #mss <- mss[, grep('126|127', sampleNames(mss), invert=TRUE)]
-        
+
         return(mss)
       }
       resmir5a6.lst <- prepBlkAnnot(resmir5a6.df, 'mir5a6')
       resmir5a6.mss <- makeBlkMSS(resmir5a6.lst, 'mir5a6')
       transpose.r <- as.data.frame(t(resmir5a6.mss))
       #
-      
+
       write.table(transpose.r, "Figures/RawMS_ProteinMatrix.csv", sep=",", row.names=FALSE)
-     
+
       # NORMALIZATION check with boxplot
       #change file name
       resmir5a6vsn.mss <- normalise(resmir5a6.mss, 'vsn')
@@ -315,45 +315,45 @@ shinyServer(function(input, output, session) {
       tiff(paste("Figures/NormalizationBoxPlot.tiff"), width = 4, height = 4, units = 'in', res=600)
       .plot(resmir5a6vsn.mss)
       dev.off()
-      
+
       pd <- phenoData(resmir5a6vsn.mss)$TreatmentGroup
       names(pd) <- sampleNames(resmir5a6vsn.mss)
-      
-      
+
+
       plotPCA_sc_v2 <- function(m, pdat, component, title='') { # select components
         ## component: either 1 (comp1vscomp2) or 2 (comp2vscomp3)
         pca <- prcomp(m, scale=FALSE)
         df <- as.data.frame(pca$rotation[, 1:4])
         df <- namerows(df, col.name='Samples')
-        
+
         spl <- df$Samples
         cl <- pdat[match(spl, names(pdat))]
         spl <- ifelse(cl==1, pcaCtl, pcaTreat)
         df$Samples <- spl
-        
-        if (component=='1') { 
+
+        if (component=='1') {
           p <- ggplot(df, aes(PC1, PC2)) + geom_point(shape=21, size = 2, stroke=1, color="black", aes(fill=Samples)) + scale_fill_manual(values=c("white", "black"))
         } else if (component=='2') {
-          p <- ggplot(df, aes(PC2, PC3, colour=Samples)) + geom_point(size=2) 
+          p <- ggplot(df, aes(PC2, PC3, colour=Samples)) + geom_point(size=2)
           #p <- ggplot(df, aes(PC3, PC4, colour=Samples)) + geom_point(size=2)
         }
-        
+
         p <- p + theme(legend.position='right', legend.title=element_blank())
         p <- p + labs(title=title)
-        
+
         return(p)
       }
-      
+
       #change file name
       e <- exprs(resmir5a6vsn.mss)
       p <- plotPCA_sc_v2(e, pd, '1', title=paste('', '')) +
         theme_classic()
       tiff(paste("Figures/PCAplot.tiff"), width = 4, height = 4, units = 'in', res = 600)
-      
+
       plot(p)
       dev.off()
-      
-      
+
+
       group <- factor(phenoData(resmir5a6vsn.mss)$TreatmentGroup)
       #write.table(group, "group_shinyapp_matrix.csv", sep=",")
       design <- model.matrix(~0+group)
@@ -363,14 +363,14 @@ shinyServer(function(input, output, session) {
       #write.table(e, "e_shinyapp_matrix.csv", sep=",")
       #write.table(fit, "fit_shinyapp_matrix.csv", sep=",")
       cm <- makeContrasts(Ctrl-Transgn, levels=design)
-      
+
       fit2 <- contrasts.fit(fit, cm)
       #write.table(fit2, "fit2_shinyapp_matrix.csv", sep=",")
       fit2 <- eBayes(fit2)
       #write.table(fit2, "fit2ebayes_shinyapp_matrix.csv", sep=",")
-      
-      
-      
+
+
+
       ttUp.df <- topTable(fit2, number=Inf, sort.by ='p', p.value=1)[, c(1, 4, 5)]
       #write.table(ttUp.df, "up_fit2ebayes_shinyapp_matrix.csv", sep=",")
       ttUp.df$symbol <- unlist(mget(rownames(ttUp.df), uniprotmir5a62sym, ifnotfound=rownames(ttUp.df)))
@@ -392,25 +392,25 @@ shinyServer(function(input, output, session) {
       tt.df$symbol <- unlist(mget(rownames(tt.df), uniprotmir5a62sym, ifnotfound=rownames(tt.df)))
       tt.df$FC <- ifelse(tt.df$logFC >= 0, inv.glog2(tt.df$logFC), -inv.glog2(-tt.df$logFC))
       tt.df$logPval <- -log10(tt.df[,c(2)])
-      
+
       write.table(tt.df, file=paste("Figures/StatsTable.csv"), quote=FALSE, sep=',', row.names = FALSE)
-      
+
         tt.df
-        
-      
+
+
     })
-    
+
     dataFilter <- reactive({
       dataFrame()[dataFrame()$logFC > input$fcCut[1] & dataFrame()$logFC < input$fcCut[2],]
     })
-    
+
     output$volcanoPlot <- renderPlot({
-        
-        highlight_df <- dataFilter() %>% 
+
+        highlight_df <- dataFilter() %>%
           filter(symbol==input$protint)
-        highlight_df_down <- dataFilter() %>% 
+        highlight_df_down <- dataFilter() %>%
           filter(logFC<=-1)
-        highlight_df_up <- dataFilter() %>% 
+        highlight_df_up <- dataFilter() %>%
           filter(logFC>=1)
         ggplot(dataFilter(),aes(x=logFC,y=logPval)) + geom_point(size=2, alpha=1, col='black') +
         labs(title=input$plottitle, x=input$xaxis, y=input$yaxis) +
@@ -426,18 +426,18 @@ shinyServer(function(input, output, session) {
         #geom_text_repel(data=highlight_df_down, aes(x=logFC, y=logPval, label=highlight_df_down$symbol), colour='black', size=2) +
         #geom_text_repel(data=highlight_df_up, aes(x=logFC, y=logPval, label=highlight_df_up$symbol), colour='black', size=2) +
         theme_classic()
-        
+
 
     })
-    
+
     plotOutput <- reactive({
-      
-      
-      highlight_df <- dataFilter() %>% 
+
+
+      highlight_df <- dataFilter() %>%
         filter(symbol==input$protint)
-      highlight_df_down <- dataFilter() %>% 
+      highlight_df_down <- dataFilter() %>%
         filter(logFC<=-1)
-      highlight_df_up <- dataFilter() %>% 
+      highlight_df_up <- dataFilter() %>%
         filter(logFC>=1)
       ggplot(dataFilter(),aes(x=logFC,y=logPval)) + geom_point(size=2, alpha=1, col='black') +
         labs(title=input$plottitle, x=input$xaxis, y=input$yaxis) +
@@ -453,27 +453,27 @@ shinyServer(function(input, output, session) {
         #geom_text_repel(data=highlight_df_down, aes(x=logFC, y=logPval, label=highlight_df_down$symbol), colour='black', size=2) +
         #geom_text_repel(data=highlight_df_up, aes(x=logFC, y=logPval, label=highlight_df_up$symbol), colour='black', size=2) +
         theme_classic()
-      
-      
+
+
     })
 
 
     observeEvent(input$downloadPlot, {
         ggsave(paste("Figures/VolcanoPlot.png"),plotOutput(), width = 8, height = 4, dpi=600)
       })
-    
-    
+
+
 
     clicked <- reactive({
       # We need to tell it what the x and y variables are:
       nearPoints(dataFilter(), input$plot_click, xvar = "logFC", yvar = "logPval")
     })
-    
+
     #output those points into a table
     output$clickedPoints <- renderTable({
       clicked()
     }, rownames = T)
-    
+
     statsAnalysis <- reactive({
       switch(input$analysisOptions,
              "StatsTable" = read.csv("StatsTable.csv"),
@@ -481,7 +481,7 @@ shinyServer(function(input, output, session) {
              "StatsDownregulated" = read.csv("StatsDownregulated.csv"),
              "ProteinMatrix" = read.csv("RawMS_ProteinMatrix.csv"))
     })
-    
+
     output$analysisTable <- renderTable({
       head(statsAnalysis(),10)
     })
