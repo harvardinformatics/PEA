@@ -1,3 +1,5 @@
+#Created by Alexandria D'Souza and Juerg Straubhaar
+
 options(shiny.maxRequestSize=300*1024^2) 
 
 library(MSnbase)

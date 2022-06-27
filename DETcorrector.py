@@ -1,3 +1,5 @@
+#Created by Alexandria D'Souza
+
 from scipy.optimize import curve_fit
 import sys
 import csv
