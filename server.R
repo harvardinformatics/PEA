@@ -1,4 +1,4 @@
-options(shiny.maxRequestSize=300*1024^2)
+options(shiny.maxRequestSize=300*1024^2) 
 
 library(MSnbase)
 library(reshape)
@@ -25,97 +25,48 @@ shinyServer(function(input, output, session) {
     observeEvent(input$runimputation1, {
       impute.df <- read.csv(input$psmfilename$datapath, header=TRUE)
       startAbundance <- as.integer(grep(paste(input$abundancecolumn,"$",sep=''), colnames(impute.df)))-1
-
+     
       system(paste("python3 missForest_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2,  " ", input$psmfilename$name, wait=FALSE))
-
+      
     })
     observeEvent(input$runimputation2, {
       impute.df <- read.csv(input$psmfilename$datapath, header=TRUE)
       startAbundance <- as.integer(grep(paste(input$abundancecolumn,"$",sep=''), colnames(impute.df)))-1
-
+      
       system(paste("python3 KNN_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2, " ", input$psmfilename$name, wait=FALSE))
-
+      
     })
     observeEvent(input$runimputation3, {
       impute.df <- read.csv(input$psmfilename$datapath, header=TRUE)
       startAbundance <- as.integer(grep(paste(input$abundancecolumn,"$",sep=''), colnames(impute.df)))-1
-
-      system(paste("python3 RegImpute_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2, " ", input$psmfilename$name, wait=FALSE))
-
+      
+      system(paste("python3 RegImpute_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2, " ", input$psmfilename$name,  wait=FALSE))
+      
     })
-    missForestMV <- reactive({
-      switch(input$mvOptions,
-             "missForest" = read.csv("Imputed_missForest.csv"),
-             "KNN" = read.csv("Imputed_KNN.csv"),
-             "RegImpute" = read.csv("Imputed_RegImpute.csv"))
+    observeEvent(input$runDETcorrector, {
+      impute.df <- read.csv(input$psmfilenameDET$datapath, header=TRUE)
+      startAbundance <- as.integer(grep(paste(input$abundancecolumnDET,"$",sep=''), colnames(impute.df)))-1
+      
+      system(paste("python3 DETcorrector.py ", input$psmfilenameDET$datapath, " ", input$replicatenum1DET, " ", startAbundance, " ", input$replicatenum2DET, " ", input$psmfilenameDET$name,  wait=FALSE))
+      
     })
-
-    output$table <- renderTable({
-      head(missForestMV(),10)
-    })
-    output$downloadData <- downloadHandler(
-      filename = function() {
-        paste(input$mvOptions, ".csv", sep = "")
-      },
-      content = function(file) {
-        write.csv(missForestMV(), file, row.names = FALSE)
-      }
-    )
-    observeEvent(input$runfilter1, {
-
+    observeEvent(input$runPDfilter, {
+      
       psmfile.df <- read.csv(input$PSMfile$datapath, header=TRUE)
       protfile.df <- read.csv(input$Protfile$datapath, header=TRUE)
       accPSM <- as.integer(grep("Master.Protein.Accessions", colnames(psmfile.df)))-1
       accProt <- as.integer(grep("Accession", colnames(protfile.df)))-1
-      system(paste("python3 missForest_match.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name, wait=FALSE))
-
+      
+      system(paste("python3 match.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name,  wait=FALSE))
+      
     })
-
-    observeEvent(input$runfilter2, {
-      psmfile.df <- read.csv(input$PSMfile$datapath, header=TRUE)
-      protfile.df <- read.csv(input$Protfile$datapath, header=TRUE)
-      accPSM <- as.integer(grep("Master.Protein.Accessions", colnames(psmfile.df)))-1
-      accProt <- as.integer(grep("Accession", colnames(protfile.df)))-1
-      system(paste("python3 KNN_match.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name, wait=FALSE))
-
-    })
-
-    observeEvent(input$runfilter3, {
-      psmfile.df <- read.csv(input$PSMfile$datapath, header=TRUE)
-      protfile.df <- read.csv(input$Protfile$datapath, header=TRUE)
-      accPSM <- as.integer(grep("Master.Protein.Accessions", colnames(psmfile.df)))-1
-      accProt <- as.integer(grep("Accession", colnames(protfile.df)))-1
-      system(paste("python3 RegImpute_match.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name, wait=FALSE))
-
-    })
-
-    filterMV <- reactive({
-      switch(input$filterOptions,
-             "missForest_Filtered" = read.csv("Imputed_missForest_filtered.csv"),
-             "KNN_Filtered" = read.csv("Imputed_KNN_filtered.csv"),
-             "RegImpute_Filtered" = read.csv("Imputed_RegImpute_filtered.csv"))
-    })
-
-
-
-    output$tableFiltered <- renderTable({
-      head(filterMV(),10)
-    })
-    output$downloadFilter <- downloadHandler(
-      filename = function() {
-        paste(input$filterOptions, ".csv", sep = "")
-      },
-      content = function(file) {
-        write.csv(filterMV(), file, row.names = FALSE)
-      }
-    )
     dataFrame <- reactive({
       #X11.options(width=5, height=5, xpos=1200, ypos=500)
       #options(editor="/usr/bin/vim")
       #options(stringsAsFactors=FALSE)
-
+      
       source('functions_for_proteomics_Rcode.R')
-
+      
       # LOAD DATA
       #CHANGE input file name
       inFile<-input$csvfile
@@ -126,7 +77,7 @@ shinyServer(function(input, output, session) {
       xmir5a6.df$PSMcount <- str_count(xmir5a6.df$Master.Protein.Accessions)
       xmir5a6.df <- xmir5a6.df[!(xmir5a6.df$PSMcount=='1'),]
 
-      print('printing args from R code')
+      print('printing args from R code') 
       if (!exists("args")) {
         suppressPackageStartupMessages(library("argparse"))
         parser <- ArgumentParser()
@@ -136,8 +87,8 @@ shinyServer(function(input, output, session) {
                             help="Second parameter [default %(defult)s]")
         args <- parser$parse_args()
       }
-
-
+      
+      
       # annotation
       #annotmir5a6.df <- xmir5a6.df[, c(as.integer(input$peptideCol), as.integer(input$accessionCol))]
       annotmir5a6.df <- xmir5a6.df[, c(as.integer(grep("Annotated.Sequence", colnames(xmir5a6.df))), as.integer(grep("Master.Protein.Accessions", colnames(xmir5a6.df))))]
@@ -152,7 +103,7 @@ shinyServer(function(input, output, session) {
       apply(annotmir5a6.df, 1, function(x) {
         pepseqmir5a62acc[[x[1]]] <- x[2]
       })
-
+      
       uprot1<-input$uniprotout
       if (is.null(uprot1))
         return(NULL)
@@ -169,26 +120,26 @@ shinyServer(function(input, output, session) {
       })
       # cntl.v <- gsub(", ", "|", input$controlchannels)
       # trt.v <- gsub(", ", "|", input$treatmentchannels)
-      #
-      # matchesCntl <- unique(grep(cntl.v,
+      # 
+      # matchesCntl <- unique(grep(cntl.v, 
       #                        colnames(xmir5a6.df), value=TRUE))
-      # matchesTrt <- unique(grep(trt.v,
+      # matchesTrt <- unique(grep(trt.v, 
       #                            colnames(xmir5a6.df), value=TRUE))
       # abu.m <- c(matchesCntl, matchesTrt)
-      #
+      # 
       # abunum.m <- which(colnames(xmir5a6.df) %in% abu.m)
-
-      matchesAb <- unique(grep('Abundance',
+      
+      matchesAb <- unique(grep('Abundance', 
                                 colnames(xmir5a6.df), value=TRUE))
-
+      
       abunum.v <- which(colnames(xmir5a6.df) %in% matchesAb)
-
-
+      
+      
       isolint <- as.integer(grep("^Isolation.Interference", colnames(xmir5a6.df)))
       outfile <- input$outputfile
       pcaCtl <- input$pcacontrol
       pcaTreat <- input$pcatreatment
-
+    
       #CHANGE df, peptix, fileIDix, isolinterfix, lessperc, startix, endix
       #isolinterfix, Isolation Interference [%] column
       #lessperc, is float for setting coisolation interference threshold (i.e. default 70.0)
@@ -198,12 +149,12 @@ shinyServer(function(input, output, session) {
       ymir5a6.lst <- separate_PDPSM(mir5a6.df, 2)
       #write.table(ymir5a6.lst, "ymir5a6_matrix.csv", sep=",")
       xmir5a6.lst <- rmAnyMissing(ymir5a6.lst)
-
+      
       #xmir5a6.lst <- xmir5a6.lst[paste('F1', seq(20), sep='.')]
-
+      
       # add protein column
       mir5a6.lst <- lapply(xmir5a6.lst, function(df) {
-        rownames(df) <- make.unique(df$PepSeq, sep=';')
+        rownames(df) <- make.unique(df$PepSeq, sep=';')    
         df$Prot <- as.character(unlist(mget(df$PepSeq, pepseqmir5a62acc, ifnotfound=NA)))
         df <- df[!is.na(df$Prot), ]
         df <- df[-1]
@@ -212,10 +163,10 @@ shinyServer(function(input, output, session) {
         df <- df[o, ]
         return(df)
       })
-
+      
       mir5a6.lst <- lapply(mir5a6.lst, function(df) {
         colnames(df)  <- sub('F.*_', 'F_', colnames(df))
-
+       
         return(df)
       })
       #write.table(xresmir5a6.df, "xresmir5a6_shinyapp_matrix.csv", sep=",")
@@ -229,27 +180,27 @@ shinyServer(function(input, output, session) {
         xx<-ncol(resmir5a6.df)
         prot_matrix <- resmir5a6.df[, 2:xx]
         norm_prot <- subset(resmir5a6.df, resmir5a6.df$Prot == input$protnorm)
-
+       
         np <- norm_prot[2:xx]
         resmir5a6.df[, 2:xx] <- mapply('/', prot_matrix, np)
-
-
+        
+        
       }
-
+      
       #write.table(resmir5a6.df, "resmir5a6_shinyapp_matrix.csv", sep=",")
       # MAKE MSnbase OBJECT
       prepBlkAnnot <- function(df, suff) {
         adf <- df
         adf <- adf[order(adf$Prot, decreasing=FALSE), ]
-
+        
         fdf <- data.frame(ID=adf$Prot, Acc=adf$Prot)
         rownames(fdf) <- fdf$ID
-
+        
         rownames(adf) <- adf$Prot
         bm <- adf[-1]
         bm[colnames(bm)] <- sapply(bm[colnames(bm)], as.numeric)
         bm <- as.matrix(bm)
-
+        
         bm.cnames <- sapply(colnames(bm), function(x) {
           if (grepl('126', x)) {
             x <- paste(x, as.integer(input$channel126), sep=',')
@@ -285,32 +236,31 @@ shinyServer(function(input, output, session) {
             x <- paste(x, as.integer(input$channel134N), sep=',')
           } else if (grepl('134C', x)) {
             x <- paste(x, as.integer(input$channel134C), sep=',')
-          }
+          } 
         })
         write.table(bm.cnames, file=paste('pData_', suff, '.txt', sep=''), col.names=paste('TreatmentGroup', sep=','),
                     row.names=FALSE, quote=FALSE)
-
+        
         return(list(bm, fdf))
       }
-
+      
       makeBlkMSS <- function(lst, suff) {
         pd <- read.csv(paste('pData_', suff, '.txt', sep=''))
         mss <- MSnSet(lst[[1]], lst[[2]], pd)
-        #mss <- mss[, grep('126|127', sampleNames(mss), invert=TRUE)]
-
         return(mss)
       }
       resmir5a6.lst <- prepBlkAnnot(resmir5a6.df, 'mir5a6')
       resmir5a6.mss <- makeBlkMSS(resmir5a6.lst, 'mir5a6')
       transpose.r <- as.data.frame(t(resmir5a6.mss))
       #
+      
+      write.table(transpose.r, "Figures/RawMS_ProteinMatrix.csv", sep=",", row.names=TRUE)
+      write.table(resmir5a6.mss, "RawMS_ProteinMatrix_noTranspose.csv", sep=",", row.names=FALSE)
 
-      write.table(transpose.r, "Figures/RawMS_ProteinMatrix.csv", sep=",", row.names=FALSE)
-
+      
       # NORMALIZATION check with boxplot
       #change file name
       resmir5a6vsn.mss <- normalise(resmir5a6.mss, 'vsn')
-      #resmir5a6vsn.mss <- resmir5a6.mss
       write.table(resmir5a6vsn.mss, "resmirvsn_shinyapp_matrix.csv", sep=",")
       tiff(paste("Figures/NormalizationBoxPlot.tiff"), width = 4, height = 4, units = 'in', res=600)
       .plot(resmir5a6vsn.mss)
@@ -474,26 +424,8 @@ shinyServer(function(input, output, session) {
       clicked()
     }, rownames = T)
 
-    statsAnalysis <- reactive({
-      switch(input$analysisOptions,
-             "StatsTable" = read.csv("StatsTable.csv"),
-             "StatsUpregulated" = read.csv("StatsUpregulated.csv"),
-             "StatsDownregulated" = read.csv("StatsDownregulated.csv"),
-             "ProteinMatrix" = read.csv("RawMS_ProteinMatrix.csv"))
-    })
-
-    output$analysisTable <- renderTable({
-      head(statsAnalysis(),10)
-    })
-    output$downloadAnalysis <- downloadHandler(
-      filename = function() {
-        paste(input$analysisOptions, ".csv", sep = "")
-      },
-      content = function(file) {
-        write.csv(statsAnalysis(), file, row.names = FALSE)
-      }
-    )
-
-
 })
+
+
+
 

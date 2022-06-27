@@ -12,8 +12,11 @@ from scipy.stats import ttest_ind
 from scipy.stats import variation
 from scipy.stats.mstats import gmean
 from scipy.stats import rankdata
+import pandas as pd
 import random
 import math
+from tkinter import *
+import tkinter as tk
 from collections import defaultdict
 from dupl_matrix import createMatrix, createHashtable, blankPredictor, readFile
 
@@ -81,7 +84,7 @@ def blankDecider(pmatrix, bmatrix, imatrix):
 
 def writeFile(infile, currData, annotData):
 	cData = currData.tolist()
-	fn = 'Imputed_KNN.csv'
+	fn = name + '_Imputed_KNN.csv'
 	with open(fn, 'w', newline="") as myfile:
 	    outputFile = csv.writer(myfile)
 	    outputFile.writerow(firstRow)
