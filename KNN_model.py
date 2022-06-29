@@ -17,8 +17,6 @@ from scipy.stats import rankdata
 import pandas as pd
 import random
 import math
-from tkinter import *
-import tkinter as tk
 from collections import defaultdict
 from dupl_matrix import createMatrix, createHashtable, blankPredictor, readFile
 

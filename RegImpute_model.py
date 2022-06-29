@@ -13,7 +13,6 @@ from scipy.stats import ttest_ind
 from scipy.stats import variation
 from scipy.stats.mstats import gmean
 from scipy.stats import rankdata
-import pandas as pd
 import random
 import math
 from tkinter import *
