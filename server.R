@@ -75,7 +75,7 @@ shinyServer(function(input, output, session) {
       if (is.null(inFile))
         return(NULL)
       xmir5a6.df <- read.csv(inFile$datapath, header=TRUE)
-
+      
       xmir5a6.df$PSMcount <- str_count(xmir5a6.df$Master.Protein.Accessions)
       xmir5a6.df <- xmir5a6.df[!(xmir5a6.df$PSMcount=='1'),]
 
@@ -259,7 +259,7 @@ shinyServer(function(input, output, session) {
       write.table(transpose.r, "Figures/RawMS_ProteinMatrix.csv", sep=",", row.names=TRUE)
       write.table(resmir5a6.mss, "RawMS_ProteinMatrix_noTranspose.csv", sep=",", row.names=FALSE)
 
-      
+      system(paste("python3 PVN.py ", input$PSMfile$datapath, " ", "RawMS_ProteinMatrix_noTranspose.csv", wait=FALSE))
       # NORMALIZATION check with boxplot
       #change file name
       resmir5a6vsn.mss <- normalise(resmir5a6.mss, 'vsn')
