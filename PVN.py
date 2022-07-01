@@ -11,7 +11,6 @@ import argparse
 deltaFile=sys.argv[1]
 proteinMatrix=sys.argv[2]
 
-
 def readDeltamz(infile):
 	DeltaPandas=pd.read_csv(infile)
 	DeltaPandas['Deltam/z [Da]'] = DeltaPandas['Deltam/z [Da]'].astype(float)
@@ -45,24 +44,28 @@ def main():
 	pMatrix=readProteinMatrix(proteinMatrix)
 	dFile=readDeltamz(deltaFile)
 
-	pMatrix=(list(map(list, zip(*pMatrix))))
-	groups=pMatrix[len(pMatrix)-1]
-	for protein in pMatrix:
+	protMatrix=(list(map(list, zip(*pMatrix))))
+	groups=protMatrix[len(protMatrix)-1]
+
+	dictProtein={}
+	
+	for protein in protMatrix:
 		controlGroups=[]
 		treatmentGroups=[]
 		i=1
 		while i<len(groups):
-			if group=='0':
-				controlGroups.append(float(protein[i]))
-			elif group=='1':
-				treatmentGroups.append(float(protein[i]))
+			if groups[i]=='0':
+				controlGroups.append([float(protein[i]),pMatrix[i][:-1]])
+			elif groups[i]=='1':
+				treatmentGroups.append([float(protein[i]),pMatrix[i][:-1]])
 			i+=1
-		dFile[protein]
-		#Implement Matrix Normalization, Row and Column
-		#Best method: Dict? List of Lists? NumPy Array?
 
+		try:
 
-	
+			dictProtein[dFile[protein[0]]]=[controlGroups, treatmentGroups]
+		except KeyError:
+			pass
+
 
 if __name__=="__main__":
 	main()
