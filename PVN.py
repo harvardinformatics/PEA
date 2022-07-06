@@ -16,7 +16,7 @@ proteinMatrix=sys.argv[2]
 def readDeltamz(infile):
 	DeltaPandas=pd.read_csv(infile)
 	DeltaPandas['Deltam/z [Da]'] = DeltaPandas['Deltam/z [Da]'].astype(float)
-	DeltaPandas['Master Protein Accessions','Metric']=DeltaPandas['Master Protein Accessions'].str.split('.')
+	DeltaPandas['Master Protein Accessions','Metric']=DeltaPandas['Master Protein Accessions'].str.split('-')
 	DeltaPandas=DeltaPandas.groupby(['Master Protein Accessions'])['Deltam/z [Da]'].mean()
 	return DeltaPandas
 
@@ -35,16 +35,16 @@ def applyVariance(peptideArray, deltaNorm):
 	return [y - deltaNorm for y in [float(x) for x in peptideArray]]
 
 def applyNormalization(Abundance, replArray, varianceArray):
-	return math.log(Abundance/abs(np.var(replArray)-np.var(varianceArray[1])), 2)
+	return abs(math.log(Abundance/abs(np.var(replArray)-np.var(varianceArray[1])), 2))
 
-def writeFile(infile, DataMatrix):
-	fn = infile + '_PVNtest.csv'
+def writeFile(DataMatrix, group):
+	fn = 'ProteinNormalization_matrix.csv'
+	#Need to add Channel Description
 	with open(fn, 'w', newline="") as myfile:
 	    outputFile = csv.writer(myfile)
-	    i=0
-	    while i<len(DataMatrix):
-	        outputFile.writerows([DataMatrix[i]])
-	        i+=1
+	    for key, value in DataMatrix.items():
+	    	outputFile.writerows([[key]+value[0]+value[1]])
+	    outputFile.writerows([['TreatmentGroups']+group])
 
 
 def main():
@@ -59,6 +59,7 @@ def main():
 	for protein in protMatrix:
 		controlGroups=[]
 		treatmentGroups=[]
+		formatKey=protein[0].replace('.','-')
 		i=1
 		while i<len(groups):
 			if groups[i]=='0':
@@ -75,7 +76,7 @@ def main():
 			controlNormalized=[]
 			i=0
 			while i<len(controlPeps):
-				controlNormalized.append(applyNormalization(controlReps[i], controlReps, applyVariance(controlPeps[i],dFile[protein[0]])))
+				controlNormalized.append(applyNormalization(controlReps[i], controlReps, applyVariance(controlPeps[i],dFile[formatKey])))
 				i+=1
 			controlGroups=[]
 
@@ -87,12 +88,13 @@ def main():
 			treatmentNormalized=[]
 			j=0
 			while j<len(treatmentPeps):
-				treatmentNormalized.append(applyNormalization(treatmentReps[j], treatmentReps, applyVariance(treatmentPeps[j],dFile[protein[0]])))
+				treatmentNormalized.append(applyNormalization(treatmentReps[j], treatmentReps, applyVariance(treatmentPeps[j],dFile[formatKey])))
 				j+=1
 			treatmentGroups=[]
-			dictProtein[protein[0]]=[controlNormalized,treatmentNormalized]
+			dictProtein[formatKey]=[controlNormalized,treatmentNormalized]
 		except KeyError as entry:
 			pass
+		writeFile(dictProtein, groups[1:])
 
 	print(dictProtein)
 if __name__=="__main__":

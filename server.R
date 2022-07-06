@@ -259,11 +259,11 @@ shinyServer(function(input, output, session) {
       write.table(transpose.r, "Figures/RawMS_ProteinMatrix.csv", sep=",", row.names=TRUE)
       write.table(resmir5a6.mss, "RawMS_ProteinMatrix_noTranspose.csv", sep=",", row.names=FALSE)
 
-      system(paste("python3 PVN.py ", input$PSMfile$datapath, " ", "RawMS_ProteinMatrix_noTranspose.csv", wait=FALSE))
+      system(paste("python3 PVN.py ", input$csvfile$datapath, " ", "RawMS_ProteinMatrix_noTranspose.csv", wait=FALSE))
       # NORMALIZATION check with boxplot
-      #change file name
-      resmir5a6vsn.mss <- normalise(resmir5a6.mss, 'vsn')
-      write.table(resmir5a6vsn.mss, "resmirvsn_shinyapp_matrix.csv", sep=",")
+      #Need to change following code to take in Protein Normalization instead of VSN Normalization
+     
+      #resmir5a6vsn.mss <- read.csv("ProteinNormalization_matrix.csv", sep=",")
       tiff(paste("Figures/NormalizationBoxPlot.tiff"), width = 4, height = 4, units = 'in', res=600)
       .plot(resmir5a6vsn.mss)
       dev.off()
