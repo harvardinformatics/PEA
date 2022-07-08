@@ -1,14 +1,12 @@
-MSnProt.ms <- readMSnSet2("ProteinNormalization_matrix.csv", ecol=1)
-MSnProt.ms$featureNames <- rep(f)
-print(MSnProt.ms)
+library(ggplot2)
+library(tidyr)
 
+pn.df <- read.csv("ProteinNormalization_matrix_box.csv", sep=',')
 
+p <- ggplot(data=pn.df, aes(x=ProteinNorm, y=Channel, colour=TreatmentGroup))+geom_boxplot()
 tiff(paste("Figures/NormalizationBoxPlot.tiff"), width = 4, height = 4, units = 'in', res=600)
-.plot(resmir5a6vsn.mss)
+plot(p)
 dev.off()
-
-pd <- phenoData(resmir5a6vsn.mss)$TreatmentGroup
-names(pd) <- sampleNames(resmir5a6vsn.mss)
 
 
 plotPCA_sc_v2 <- function(m, pdat, component, title='') { # select components
