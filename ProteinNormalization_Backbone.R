@@ -1,6 +1,9 @@
 library(ggplot2)
 library(tidyr)
 
+library(pca3d)
+library(wesanderson)
+
 pn.df <- read.csv("ProteinNormalization_matrix_box.csv", sep=',')
 
 p <- ggplot(data=pn.df, aes(x=ProteinNorm, y=Channel, colour=TreatmentGroup))+geom_boxplot()
@@ -9,38 +12,18 @@ plot(p)
 dev.off()
 
 
-plotPCA_sc_v2 <- function(m, pdat, component, title='') { # select components
-  ## component: either 1 (comp1vscomp2) or 2 (comp2vscomp3)
-  pca <- prcomp(m, scale=FALSE)
-  df <- as.data.frame(pca$rotation[, 1:4])
-  df <- namerows(df, col.name='Samples')
-  
-  spl <- df$Samples
-  cl <- pdat[match(spl, names(pdat))]
-  spl <- ifelse(cl==1, pcaCtl, pcaTreat)
-  df$Samples <- spl
-  
-  if (component=='1') {
-    p <- ggplot(df, aes(PC1, PC2)) + geom_point(shape=21, size = 2, stroke=1, color="black", aes(fill=Samples)) + scale_fill_manual(values=c("white", "black"))
-  } else if (component=='2') {
-    p <- ggplot(df, aes(PC2, PC3, colour=Samples)) + geom_point(size=2)
-    #p <- ggplot(df, aes(PC3, PC4, colour=Samples)) + geom_point(size=2)
-  }
-  
-  p <- p + theme(legend.position='right', legend.title=element_blank())
-  p <- p + labs(title=title)
-  
-  return(p)
-}
-
 #change file name
-e <- exprs(resmir5a6vsn.mss)
-p <- plotPCA_sc_v2(e, pd, '1', title=paste('', '')) +
-  theme_classic()
-tiff(paste("Figures/PCAplot.tiff"), width = 4, height = 4, units = 'in', res = 600)
+pn_matrix.df <- read.csv("ProteinNormalization_matrix_transpose.csv", sep=',')
+pca <- prcomp(pn_matrix.df[2:length(pn_matrix.df)], scale=FALSE)
+df <- as.data.frame(pca$rotation[, 1:4])
+df <- namerows(df, col.name='Samples')
+MetaEDIT.df <- read.table(pca_matrix.df, header=TRUE,quote='\"', sep=',', comment.char='')
 
+p <- ggplot(MetaEDIT.df, aes(PC1, PC2, colour=Samples)) + geom_point(size=4) + scale_color_manual(values=wes_palette(n=3, name="Darjeeling1")) + ggtitle("Protein Normalization, Test")
+tiff("PCA_Test.tiff", width = 6, height = 8, units = 'in', res=600)
 plot(p)
 dev.off()
+
 
 
 group <- factor(phenoData(resmir5a6vsn.mss)$TreatmentGroup)
