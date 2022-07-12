@@ -38,7 +38,7 @@ def applyNormalization(Abundance, replArray, varianceArray):
 	return abs(math.log(Abundance/abs(np.var(replArray)-np.var(varianceArray[1])), 2))
 
 def writeFile(DataMatrix, group):
-	fn = 'ProteinNormalization_matrix.csv'
+	fn = 'PVN_ProteinNormalization_matrix.csv'
 	#Need to add Channel Description
 	with open(fn, 'w', newline="") as myfile:
 	    outputFile = csv.writer(myfile)

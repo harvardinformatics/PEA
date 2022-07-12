@@ -256,70 +256,48 @@ shinyServer(function(input, output, session) {
       transpose.r <- as.data.frame(t(resmir5a6.mss))
       #
       
-      write.table(transpose.r, "Figures/RawMS_ProteinMatrix.csv", sep=",", row.names=TRUE)
-      write.table(resmir5a6.mss, "RawMS_ProteinMatrix_noTranspose.csv", sep=",", row.names=FALSE)
-
-      system(paste("python3 PVN.py ", input$csvfile$datapath, " ", "RawMS_ProteinMatrix_noTranspose.csv", wait=FALSE))
+      
+      #system(paste("python3 PVN.py ", input$csvfile$datapath, " ", "RawMS_ProteinMatrix_noTranspose.csv", wait=FALSE))
       # NORMALIZATION check with boxplot
       #Need to change following code to take in Protein Normalization instead of VSN Normalization
      
-      #resmir5a6vsn.mss <- read.csv("ProteinNormalization_matrix.csv", sep=",")
-      tiff(paste("Figures/NormalizationBoxPlot.tiff"), width = 4, height = 4, units = 'in', res=600)
-      .plot(resmir5a6vsn.mss)
-      dev.off()
-
-      pd <- phenoData(resmir5a6vsn.mss)$TreatmentGroup
-      names(pd) <- sampleNames(resmir5a6vsn.mss)
-
-
-      plotPCA_sc_v2 <- function(m, pdat, component, title='') { # select components
-        ## component: either 1 (comp1vscomp2) or 2 (comp2vscomp3)
-        pca <- prcomp(m, scale=FALSE)
-        df <- as.data.frame(pca$rotation[, 1:4])
-        df <- namerows(df, col.name='Samples')
-
-        spl <- df$Samples
-        cl <- pdat[match(spl, names(pdat))]
-        spl <- ifelse(cl==1, pcaCtl, pcaTreat)
-        df$Samples <- spl
-
-        if (component=='1') {
-          p <- ggplot(df, aes(PC1, PC2)) + geom_point(shape=21, size = 2, stroke=1, color="black", aes(fill=Samples)) + scale_fill_manual(values=c("white", "black"))
-        } else if (component=='2') {
-          p <- ggplot(df, aes(PC2, PC3, colour=Samples)) + geom_point(size=2)
-          #p <- ggplot(df, aes(PC3, PC4, colour=Samples)) + geom_point(size=2)
-        }
-
-        p <- p + theme(legend.position='right', legend.title=element_blank())
-        p <- p + labs(title=title)
-
-        return(p)
-      }
-
+      write.table(transpose.r, "Figures/RawMS_ProteinMatrix.csv", sep=",", row.names=TRUE)
+      write.table(resmir5a6.mss, "RawMS_ProteinMatrix_noTranspose.csv", sep=",", row.names=FALSE)
+      
+      system(paste("python3 PVN.py ", input$csvfile$datapath, " ", "RawMS_ProteinMatrix_noTranspose.csv", wait=FALSE))
+      
+      # NORMALIZATION check with boxplot
       #change file name
-      e <- exprs(resmir5a6vsn.mss)
-      p <- plotPCA_sc_v2(e, pd, '1', title=paste('', '')) +
-        theme_classic()
-      tiff(paste("Figures/PCAplot.tiff"), width = 4, height = 4, units = 'in', res = 600)
-
+      pn.df <- read.csv("ProteinNormalization_matrix_box.csv", sep=',')
+      
+      p <- ggplot(data=pn.df, aes(x=ProteinNorm, y=Channel, colour=TreatmentGroup))+geom_boxplot()
+      tiff(paste("Figures/NormalizationBoxPlot.tiff"), width = 4, height = 4, units = 'in', res=600)
       plot(p)
       dev.off()
-
-
-      group <- factor(phenoData(resmir5a6vsn.mss)$TreatmentGroup)
-      #write.table(group, "group_shinyapp_matrix.csv", sep=",")
-      design <- model.matrix(~0+group)
+      
+      
+      #change file name
+      pn_matrix.df <- read.csv("ProteinNormalization_matrix_transpose.csv", sep=',', row.names = 'Protein')
+      pca <- prcomp(pn_matrix.df[2:length(pn_matrix.df)], scale=FALSE)
+      df <- as.data.frame(pca$rotation[, 1:4])
+      df <- namerows(df, col.name='Samples')
+      MetaEDIT.df <- read.table('PCA_matrix.csv', header=TRUE,quote='\"', sep=',', comment.char='')
+      
+      p <- ggplot(MetaEDIT.df, aes(PC1, PC2, colour=Samples)) + geom_point(size=4) + scale_color_manual(values=wes_palette(n=3, name="Darjeeling1")) + ggtitle("Protein Normalization, Test")
+      tiff("Figures/PCA.tiff", width = 6, height = 8, units = 'in', res=600)
+      plot(p)
+      dev.off()
+      
+      
+      pn_norm_matrix.df <- read.csv("ProteinNormalization_matrix.csv", sep=',')
+      group <- factor(pn_norm_matrix.df$TreatmentGroups)
+      design <- model.matrix(1~0+group)
       colnames(design) <- c('Ctrl', 'Transgn')
-      #write.table(design, "design_shinyapp_matrix.csv", sep=",")
-      fit <- lmFit(e, design)
-      #write.table(e, "e_shinyapp_matrix.csv", sep=",")
-      #write.table(fit, "fit_shinyapp_matrix.csv", sep=",")
+      fit <- lmFit(pn_matrix.df, design)
       cm <- makeContrasts(Ctrl-Transgn, levels=design)
-
+      
       fit2 <- contrasts.fit(fit, cm)
-      #write.table(fit2, "fit2_shinyapp_matrix.csv", sep=",")
       fit2 <- eBayes(fit2)
-      #write.table(fit2, "fit2ebayes_shinyapp_matrix.csv", sep=",")
 
 
 

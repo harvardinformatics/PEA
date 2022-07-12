@@ -13,11 +13,11 @@ dev.off()
 
 
 #change file name
-pn_matrix.df <- read.csv("ProteinNormalization_matrix_transpose.csv", sep=',')
+pn_matrix.df <- read.csv("ProteinNormalization_matrix_transpose.csv", sep=',', row.names = 'Protein')
 pca <- prcomp(pn_matrix.df[2:length(pn_matrix.df)], scale=FALSE)
 df <- as.data.frame(pca$rotation[, 1:4])
 df <- namerows(df, col.name='Samples')
-MetaEDIT.df <- read.table(pca_matrix.df, header=TRUE,quote='\"', sep=',', comment.char='')
+MetaEDIT.df <- read.table('PCA_matrix.csv', header=TRUE,quote='\"', sep=',', comment.char='')
 
 p <- ggplot(MetaEDIT.df, aes(PC1, PC2, colour=Samples)) + geom_point(size=4) + scale_color_manual(values=wes_palette(n=3, name="Darjeeling1")) + ggtitle("Protein Normalization, Test")
 tiff("PCA_Test.tiff", width = 6, height = 8, units = 'in', res=600)
@@ -25,11 +25,11 @@ plot(p)
 dev.off()
 
 
-
-group <- factor(phenoData(resmir5a6vsn.mss)$TreatmentGroup)
+pn_norm_matrix.df <- read.csv("ProteinNormalization_matrix.csv", sep=',')
+group <- factor(pn_norm_matrix.df$TreatmentGroups)
 design <- model.matrix(~0+group)
 colnames(design) <- c('Ctrl', 'Transgn')
-fit <- lmFit(e, design)
+fit <- lmFit(pn_matrix.df, design)
 cm <- makeContrasts(Ctrl-Transgn, levels=design)
 
 fit2 <- contrasts.fit(fit, cm)
