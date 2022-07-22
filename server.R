@@ -23,6 +23,9 @@ library(magick)
 
 library(mwshiny)
 library(dplyr)
+library(tidyr)
+
+library(pca3d)
 library(wesanderson)
 shinyServer(function(input, output, session) {
     observeEvent(input$runimputation1, {
@@ -263,9 +266,9 @@ shinyServer(function(input, output, session) {
       #Need to change following code to take in Protein Normalization instead of VSN Normalization
      
       write.table(transpose.r, "Figures/RawMS_ProteinMatrix.csv", sep=",", row.names=TRUE)
-      write.table(resmir5a6.mss, "RawMS_ProteinMatrix_noTranspose.csv", sep=",", row.names=FALSE)
+      #write.table(resmir5a6.mss, "RawMS_ProteinMatrix_noTranspose.csv", sep=",", row.names=FALSE)
       
-      system(paste("python3 PVN.py ", input$csvfile$datapath, " ", "RawMS_ProteinMatrix_noTranspose.csv", wait=FALSE))
+      #system(paste("python3 PVN.py ", input$csvfile$datapath, " ", "RawMS_ProteinMatrix_noTranspose.csv", wait=FALSE))
       
       # NORMALIZATION check with boxplot
       #change file name
