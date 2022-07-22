@@ -23,6 +23,7 @@ library(magick)
 
 library(mwshiny)
 library(dplyr)
+library(wesanderson)
 shinyServer(function(input, output, session) {
     observeEvent(input$runimputation1, {
       impute.df <- read.csv(input$psmfilename$datapath, header=TRUE)
@@ -276,6 +277,7 @@ shinyServer(function(input, output, session) {
       dev.off()
       
       
+      
       #change file name
       pn_matrix.df <- read.csv("ProteinNormalization_matrix_transpose.csv", sep=',', row.names = 'Protein')
       pca <- prcomp(pn_matrix.df[2:length(pn_matrix.df)], scale=FALSE)
@@ -284,14 +286,14 @@ shinyServer(function(input, output, session) {
       MetaEDIT.df <- read.table('PCA_matrix.csv', header=TRUE,quote='\"', sep=',', comment.char='')
       
       p <- ggplot(MetaEDIT.df, aes(PC1, PC2, colour=Samples)) + geom_point(size=4) + scale_color_manual(values=wes_palette(n=3, name="Darjeeling1")) + ggtitle("Protein Normalization, Test")
-      tiff("Figures/PCA.tiff", width = 6, height = 8, units = 'in', res=600)
+      tiff("Figures/PCAPlot.tiff", width = 6, height = 8, units = 'in', res=600)
       plot(p)
       dev.off()
       
       
       pn_norm_matrix.df <- read.csv("ProteinNormalization_matrix.csv", sep=',')
       group <- factor(pn_norm_matrix.df$TreatmentGroups)
-      design <- model.matrix(1~0+group)
+      design <- model.matrix(~0+group)
       colnames(design) <- c('Ctrl', 'Transgn')
       fit <- lmFit(pn_matrix.df, design)
       cm <- makeContrasts(Ctrl-Transgn, levels=design)
