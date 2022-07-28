@@ -32,28 +32,28 @@ shinyServer(function(input, output, session) {
       impute.df <- read.csv(input$psmfilename$datapath, header=TRUE)
       startAbundance <- as.integer(grep(paste(input$abundancecolumn,"$",sep=''), colnames(impute.df)))-1
      
-      system(paste("python3 missForest_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2,  " ", input$psmfilename$name, wait=FALSE))
+      system(paste("python3 ImputationMethods/missForest_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2,  " ", input$psmfilename$name, wait=FALSE))
       
     })
     observeEvent(input$runimputation2, {
       impute.df <- read.csv(input$psmfilename$datapath, header=TRUE)
       startAbundance <- as.integer(grep(paste(input$abundancecolumn,"$",sep=''), colnames(impute.df)))-1
       
-      system(paste("python3 KNN_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2, " ", input$psmfilename$name, wait=FALSE))
+      system(paste("python3 ImputationMethods/KNN_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2, " ", input$psmfilename$name, wait=FALSE))
       
     })
     observeEvent(input$runimputation3, {
       impute.df <- read.csv(input$psmfilename$datapath, header=TRUE)
       startAbundance <- as.integer(grep(paste(input$abundancecolumn,"$",sep=''), colnames(impute.df)))-1
       
-      system(paste("python3 RegImpute_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2, " ", input$psmfilename$name,  wait=FALSE))
+      system(paste("python3 ImputationMethods/RegImpute_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2, " ", input$psmfilename$name,  wait=FALSE))
       
     })
     observeEvent(input$runDETcorrector, {
       impute.df <- read.csv(input$psmfilenameDET$datapath, header=TRUE)
       startAbundance <- as.integer(grep(paste(input$abundancecolumnDET,"$",sep=''), colnames(impute.df)))-1
       
-      system(paste("python3 DETcorrector.py ", input$psmfilenameDET$datapath, " ", input$replicatenum1DET, " ", startAbundance, " ", input$replicatenum2DET, " ", input$psmfilenameDET$name,  wait=FALSE))
+      system(paste("python3 DET/DETcorrector.py ", input$psmfilenameDET$datapath, " ", input$replicatenum1DET, " ", startAbundance, " ", input$replicatenum2DET, " ", input$psmfilenameDET$name,  wait=FALSE))
       
     })
     observeEvent(input$runPDfilter, {
@@ -63,7 +63,7 @@ shinyServer(function(input, output, session) {
       accPSM <- as.integer(grep("Master.Protein.Accessions", colnames(psmfile.df)))-1
       accProt <- as.integer(grep("Accession", colnames(protfile.df)))-1
       
-      system(paste("python3 match.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name,  wait=FALSE))
+      system(paste("python3 ProteinFilter/match.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name,  wait=FALSE))
       
     })
     dataFrame <- reactive({
