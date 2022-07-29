@@ -27,7 +27,7 @@ library(tidyr)
 
 library(pca3d)
 library(wesanderson)
-shinyServer(function(input, output, session) {
+PEApackage <- shinyServer(function(input, output, session) {
     observeEvent(input$runimputation1, {
       impute.df <- read.csv(input$psmfilename$datapath, header=TRUE)
       startAbundance <- as.integer(grep(paste(input$abundancecolumn,"$",sep=''), colnames(impute.df)))-1
@@ -124,16 +124,6 @@ shinyServer(function(input, output, session) {
         x <- as.character(x)
         uniprotmir5a62sym[[x[1]]] <- x[2]
       })
-      # cntl.v <- gsub(", ", "|", input$controlchannels)
-      # trt.v <- gsub(", ", "|", input$treatmentchannels)
-      # 
-      # matchesCntl <- unique(grep(cntl.v, 
-      #                        colnames(xmir5a6.df), value=TRUE))
-      # matchesTrt <- unique(grep(trt.v, 
-      #                            colnames(xmir5a6.df), value=TRUE))
-      # abu.m <- c(matchesCntl, matchesTrt)
-      # 
-      # abunum.m <- which(colnames(xmir5a6.df) %in% abu.m)
       
       matchesAb <- unique(grep('Abundance', 
                                 colnames(xmir5a6.df), value=TRUE))
@@ -147,17 +137,10 @@ shinyServer(function(input, output, session) {
       pcaTreat <- input$pcatreatment
     
       #CHANGE df, peptix, fileIDix, isolinterfix, lessperc, startix, endix
-      #isolinterfix, Isolation Interference [%] column
-      #lessperc, is float for setting coisolation interference threshold (i.e. default 70.0)
-      #mir5a6.df <- prepareData_TS_PDPSM(xmir5a6.df, as.integer(input$peptideCol), as.integer(input$fileIDix), as.integer(input$isolinterfix), as.numeric(input$lessperc), as.integer(input$startix), as.integer(input$endix))
       mir5a6.df <- prepareData_TS_PDPSM(xmir5a6.df, as.integer(grep("Annotated.Sequence", colnames(xmir5a6.df))), as.integer(grep("File.ID", colnames(xmir5a6.df))), isolint, as.numeric(input$lessperc), abunum.v)
-      #write.table(mir5a6.df, "mir5a6_matrix.csv", sep=",")
       ymir5a6.lst <- separate_PDPSM(mir5a6.df, 2)
-      #write.table(ymir5a6.lst, "ymir5a6_matrix.csv", sep=",")
       xmir5a6.lst <- rmAnyMissing(ymir5a6.lst)
-      
-      #xmir5a6.lst <- xmir5a6.lst[paste('F1', seq(20), sep='.')]
-      
+
       # add protein column
       mir5a6.lst <- lapply(xmir5a6.lst, function(df) {
         rownames(df) <- make.unique(df$PepSeq, sep=';')    
@@ -178,9 +161,6 @@ shinyServer(function(input, output, session) {
       #write.table(xresmir5a6.df, "xresmir5a6_shinyapp_matrix.csv", sep=",")
       xresmir5a6.df <- do.call(rbind, mir5a6.lst)
 
-      #count(xresmir5a6.df, vars = "id")
-      #protein number decreases here
-      #write.table(xresmir5a6.df, "xresmir5a6_shinyapp_matrix.csv", sep=",")
       resmir5a6.df <- aggregate(xresmir5a6.df[-1], xresmir5a6.df[1], sum) # aggregating! maybe not?
       if (input$protnorm != 'NA'){
         xx<-ncol(resmir5a6.df)
@@ -192,8 +172,7 @@ shinyServer(function(input, output, session) {
         
         
       }
-      
-      #write.table(resmir5a6.df, "resmir5a6_shinyapp_matrix.csv", sep=",")
+
       # MAKE MSnbase OBJECT
       prepBlkAnnot <- function(df, suff) {
         adf <- df
@@ -266,10 +245,7 @@ shinyServer(function(input, output, session) {
       #Need to change following code to take in Protein Normalization instead of VSN Normalization
      
       write.table(transpose.r, "Figures/RawMS_ProteinMatrix.csv", sep=",", row.names=TRUE)
-      #write.table(resmir5a6.mss, "RawMS_ProteinMatrix_noTranspose.csv", sep=",", row.names=FALSE)
-      
-      #system(paste("python3 PVN.py ", input$csvfile$datapath, " ", "RawMS_ProteinMatrix_noTranspose.csv", wait=FALSE))
-      
+
       # NORMALIZATION check with boxplot
       #change file name
       pn.df <- read.csv("ProteinNormalization_matrix_box.csv", sep=',')
