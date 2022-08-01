@@ -26,10 +26,12 @@ def readProteinMatrix(infile):
 	with open(fn, 'r') as myfile:
 	    file = csv.reader(myfile, dialect='excel')
 	    allData=[]
+	    channel=[]
 	    for row in file:
-	        allData.append(row)
+	        allData.append(row[1:])
+	        channel.append(row[0])
 	myfile.close()
-	return allData
+	return allData, channel
 
 def applyVariance(peptideArray, deltaNorm):
 	return [y - deltaNorm for y in [float(x) for x in peptideArray]]
@@ -37,22 +39,68 @@ def applyVariance(peptideArray, deltaNorm):
 def applyNormalization(Abundance, replArray, varianceArray):
 	return abs(math.log(Abundance/abs(np.var(replArray)-np.var(varianceArray[1])), 2))
 
-def writeFile(DataMatrix, group):
-	fn = 'PVN_ProteinNormalization_matrix.csv'
+def writeFile(DataMatrix, group, Channel):
+	fn = 'PVN_ProteinNormalization_matrix_formatting.csv'
 	#Need to add Channel Description
 	with open(fn, 'w', newline="") as myfile:
 	    outputFile = csv.writer(myfile)
 	    for key, value in DataMatrix.items():
 	    	outputFile.writerows([[key]+value[0]+value[1]])
 	    outputFile.writerows([['TreatmentGroups']+group])
+	    outputFile.writerows([Channel])
+
+def writeFilePMatrixTranspose(DataMatrix, group, Channel):
+	fn = 'ProteinNormalization_matrix_transpose.csv'
+	#Need to add Channel Description
+	with open(fn, 'w', newline="") as myfile:
+	    outputFile = csv.writer(myfile)
+	    outputFile.writerows([['Protein']+Channel[1:]])
+	    for key, value in DataMatrix.items():
+	    	outputFile.writerows([[key]+value[0]+value[1]])
+
+
+def writeFilePNormMatrix(DataMatrix, group, Channel):
+	fn = 'ProteinNormalization_matrix.csv'
+	#Need to add Channel Description
+	with open(fn, 'w', newline="") as myfile:
+	    outputFile = csv.writer(myfile)
+
+	    #outputFile.writerows([['TreatmentGroup']+['Channel']+list(DataMatrix.keys())])
+	    transposeDict=[]
+	    for key, value in DataMatrix.items():
+	    	transposeDict.append([key]+value[0]+value[1])
+	    transposeDict=(list(map(list, zip(*transposeDict))))
+
+	    i=0
+	    while i<len(transposeDict):
+	    	outputFile.writerows([[group[i]]+[Channel[i]]+transposeDict[i]])
+	    	i+=1
+
+def writeFilePNormMatrixBox(DataMatrix, group, Channel):
+	fn = 'ProteinNormalization_matrix_box.csv'
+	#Need to add Channel Description
+	with open(fn, 'w', newline="") as myfile:
+	    outputFile = csv.writer(myfile)
+	    transposeDict=[]
+	    for key, value in DataMatrix.items():
+	    	transposeDict.append([key]+value[0]+value[1])
+	    transposeDict=(list(map(list, zip(*transposeDict))))
+
+	    i=0
+	    while i<len(transposeDict):
+	    	if group[i]=='0':
+	    		outputFile.writerows([['Control']+[Channel[i]]+transposeDict[i]])
+	    	elif group[i]=='1':
+	    		outputFile.writerows([['Treatment']+[Channel[i]]+transposeDict[i]])
+	    	i+=1
 
 
 def main():
-	pMatrix=readProteinMatrix(proteinMatrix)
+	pMatrix, pChannel=readProteinMatrix(proteinMatrix)
 	dFile=readDeltamz(deltaFile)
 
 	protMatrix=(list(map(list, zip(*pMatrix))))
-	groups=protMatrix[len(protMatrix)-1]
+	groups=protMatrix[0]
 
 	dictProtein={}
 
@@ -94,9 +142,11 @@ def main():
 			dictProtein[formatKey]=[controlNormalized,treatmentNormalized]
 		except KeyError as entry:
 			pass
-		writeFile(dictProtein, groups[1:])
+		writeFile(dictProtein, groups[1:], pChannel)
+		writeFilePMatrixTranspose(dictProtein, groups[1:], pChannel)
+		writeFilePNormMatrix(dictProtein, groups, pChannel)
+		writeFilePNormMatrixBox(dictProtein, groups, pChannel)
 
-	print(dictProtein)
 if __name__=="__main__":
 	main()
 

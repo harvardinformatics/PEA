@@ -240,7 +240,7 @@ PEApackage <- shinyServer(function(input, output, session) {
       #
       
       
-      #system(paste("python3 PVN.py ", input$csvfile$datapath, " ", "RawMS_ProteinMatrix_noTranspose.csv", wait=FALSE))
+      system(paste("python3 PVN.py ", input$csvfile$datapath, " ", "RawMS_ProteinMatrix_noTranspose.csv", wait=FALSE))
       # NORMALIZATION check with boxplot
       #Need to change following code to take in Protein Normalization instead of VSN Normalization
      
