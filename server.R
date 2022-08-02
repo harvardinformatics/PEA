@@ -7,26 +7,21 @@ library(reshape)
 library(lattice)
 library(ggplot2)
 library(limma)
-
 library(ROTS)
 library(stringr)
 library(seqinr)
-
 library(ggrepel)
 library(MKmisc) # glog2
-
 library(gplots)
-
-
 library(gtools)
 library(magick)
-
 library(mwshiny)
 library(dplyr)
 library(tidyr)
-
 library(pca3d)
 library(wesanderson)
+
+
 PEApackage <- shinyServer(function(input, output, session) {
     observeEvent(input$runimputation1, {
       impute.df <- read.csv(input$psmfilename$datapath, header=TRUE)
@@ -223,7 +218,7 @@ PEApackage <- shinyServer(function(input, output, session) {
             x <- paste(x, as.integer(input$channel134C), sep=',')
           } 
         })
-        write.table(bm.cnames, file=paste('pData_', suff, '.txt', sep=''), col.names=paste('TreatmentGroup', sep=','),
+        write.table(bm.cnames, file=paste('pData_', suff, '.txt', sep=''), col.names=paste('Channel,TreatmentGroup', sep=','),
                     row.names=FALSE, quote=FALSE)
         
         return(list(bm, fdf))
@@ -237,10 +232,9 @@ PEApackage <- shinyServer(function(input, output, session) {
       resmir5a6.lst <- prepBlkAnnot(resmir5a6.df, 'mir5a6')
       resmir5a6.mss <- makeBlkMSS(resmir5a6.lst, 'mir5a6')
       transpose.r <- as.data.frame(t(resmir5a6.mss))
-      #
-      
-      
-      system(paste("python3 PVN.py ", input$csvfile$datapath, " ", "RawMS_ProteinMatrix_noTranspose.csv", wait=FALSE))
+      write.table(resmir5a6.mss, "InputFiles/RawMS_ProteinMatrix_noTranspose.csv", sep=",", row.names=FALSE)
+
+      system(paste("python3 PVN/PVN.py ", input$csvfile$datapath, " ", "InputFiles/RawMS_ProteinMatrix_noTranspose.csv", wait=FALSE))
       # NORMALIZATION check with boxplot
       #Need to change following code to take in Protein Normalization instead of VSN Normalization
      
@@ -248,7 +242,11 @@ PEApackage <- shinyServer(function(input, output, session) {
 
       # NORMALIZATION check with boxplot
       #change file name
-      pn.df <- read.csv("ProteinNormalization_matrix_box.csv", sep=',')
+      pn.df <- read.csv("InputFiles/ProteinNormalization_matrix_box.csv", sep=',', header=FALSE)
+      pn.df <- melt(pn.df)
+      pn.df['variable'] <- NULL
+      columnNames <- c('TreatmentGroup', 'Channel', 'ProteinNorm')
+      colnames(pn.df) <- columnNames
       
       p <- ggplot(data=pn.df, aes(x=ProteinNorm, y=Channel, colour=TreatmentGroup))+geom_boxplot()
       tiff(paste("Figures/NormalizationBoxPlot.tiff"), width = 4, height = 4, units = 'in', res=600)
@@ -258,13 +256,13 @@ PEApackage <- shinyServer(function(input, output, session) {
       
       
       #change file name
-      pn_matrix.df <- read.csv("ProteinNormalization_matrix_transpose.csv", sep=',', row.names = 'Protein')
+      pn_matrix.df <- read.csv("InputFiles/ProteinNormalization_matrix_transpose.csv", sep=',', row.names = 'Protein')
       pca <- prcomp(pn_matrix.df[2:length(pn_matrix.df)], scale=FALSE)
       df <- as.data.frame(pca$rotation[, 1:4])
       df <- namerows(df, col.name='Samples')
-      MetaEDIT.df <- read.table('PCA_matrix.csv', header=TRUE,quote='\"', sep=',', comment.char='')
+      #MetaEDIT.df <- read.table('PCA_matrix.csv', header=TRUE,quote='\"', sep=',', comment.char='')
       
-      p <- ggplot(MetaEDIT.df, aes(PC1, PC2, colour=Samples)) + geom_point(size=4) + scale_color_manual(values=wes_palette(n=3, name="Darjeeling1")) + ggtitle("Protein Normalization, Test")
+      p <- ggplot(df, aes(PC1, PC2, colour=Samples)) + geom_point(size=4) + scale_color_manual(values=wes_palette(n=3, name="Darjeeling1")) + ggtitle("Protein Normalization, Test")
       tiff("Figures/PCAPlot.tiff", width = 6, height = 8, units = 'in', res=600)
       plot(p)
       dev.off()

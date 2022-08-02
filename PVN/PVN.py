@@ -9,9 +9,11 @@ import pandas as pd
 import argparse
 import math
 
-deltaFile=sys.argv[1]
-proteinMatrix=sys.argv[2]
-
+#deltaFile=sys.argv[1]
+#proteinMatrix=sys.argv[2]
+deltaFile='201006L_SAM07386_BY81_YG291_TF_pH_no_normalization_PSMs_wt-split_dead-split_Imputed_missForest_DET_Corrected.csv'
+proteinMatrix='RawMS_ProteinMatrix_noTranspose.csv'
+replChannels='pData_mir5a6.txt'
 
 def readDeltamz(infile):
 	DeltaPandas=pd.read_csv(infile)
@@ -20,18 +22,27 @@ def readDeltamz(infile):
 	DeltaPandas=DeltaPandas.groupby(['Master Protein Accessions'])['Deltam/z [Da]'].mean()
 	return DeltaPandas
 
+def readReplicatesChannels(infile):
+	fn = infile
+	with open(fn, 'r') as myfile:
+	    file = csv.reader(myfile)
+	    channel=[]
+	    group=[]
+	    for row in file:
+	    	channel.append(row[0].split(',')[0])
+	    	group.append(row[0].split(',')[1])
+	myfile.close()
+	return channel,group
 
 def readProteinMatrix(infile):
 	fn = infile
 	with open(fn, 'r') as myfile:
 	    file = csv.reader(myfile, dialect='excel')
 	    allData=[]
-	    channel=[]
 	    for row in file:
-	        allData.append(row[1:])
-	        channel.append(row[0])
+	    	allData.append(row[:-1])
 	myfile.close()
-	return allData, channel
+	return allData
 
 def applyVariance(peptideArray, deltaNorm):
 	return [y - deltaNorm for y in [float(x) for x in peptideArray]]
@@ -54,7 +65,19 @@ def writeFilePMatrixTranspose(DataMatrix, group, Channel):
 	#Need to add Channel Description
 	with open(fn, 'w', newline="") as myfile:
 	    outputFile = csv.writer(myfile)
-	    outputFile.writerows([['Protein']+Channel[1:]])
+	    i=0
+	    c=1
+	    t=1
+	    ctTranspose=[]
+	    while i<len(group):
+	    	if group[i]=='0':
+	    		ctTranspose.append('Control'+'_'+str(c))
+	    		c+=1
+	    	elif group[i]=='1':
+	    		ctTranspose.append('Treatment'+'_'+str(t))
+	    		t+=1
+	    	i+=1
+	    outputFile.writerows([['Protein']+ctTranspose])
 	    for key, value in DataMatrix.items():
 	    	outputFile.writerows([[key]+value[0]+value[1]])
 
@@ -96,11 +119,13 @@ def writeFilePNormMatrixBox(DataMatrix, group, Channel):
 
 
 def main():
-	pMatrix, pChannel=readProteinMatrix(proteinMatrix)
+	pMatrix=readProteinMatrix(proteinMatrix)
 	dFile=readDeltamz(deltaFile)
+	pChannel, groups=readReplicatesChannels(replChannels)
 
 	protMatrix=(list(map(list, zip(*pMatrix))))
-	groups=protMatrix[0]
+	protMatrix=[groups]+[pChannel]+protMatrix
+
 
 	dictProtein={}
 
@@ -127,7 +152,6 @@ def main():
 				controlNormalized.append(applyNormalization(controlReps[i], controlReps, applyVariance(controlPeps[i],dFile[formatKey])))
 				i+=1
 			controlGroups=[]
-
 			treatmentReps=[]
 			treatmentPeps=[]
 			for treatmentAbundance in treatmentGroups:
