@@ -218,14 +218,14 @@ PEApackage <- shinyServer(function(input, output, session) {
             x <- paste(x, as.integer(input$channel134C), sep=',')
           } 
         })
-        write.table(bm.cnames, file=paste('pData_', suff, '.txt', sep=''), col.names=paste('Channel,TreatmentGroup', sep=','),
+        write.table(bm.cnames, file=paste('InputFiles/pData_', suff, '.txt', sep=''), col.names=paste('TreatmentGroup', sep=','),
                     row.names=FALSE, quote=FALSE)
         
         return(list(bm, fdf))
       }
       
       makeBlkMSS <- function(lst, suff) {
-        pd <- read.csv(paste('pData_', suff, '.txt', sep=''))
+        pd <- read.csv(paste('InputFiles/pData_', suff, '.txt', sep=''))
         mss <- MSnSet(lst[[1]], lst[[2]], pd)
         return(mss)
       }
@@ -234,7 +234,7 @@ PEApackage <- shinyServer(function(input, output, session) {
       transpose.r <- as.data.frame(t(resmir5a6.mss))
       write.table(resmir5a6.mss, "InputFiles/RawMS_ProteinMatrix_noTranspose.csv", sep=",", row.names=FALSE)
 
-      system(paste("python3 PVN/PVN.py ", input$csvfile$datapath, " ", "InputFiles/RawMS_ProteinMatrix_noTranspose.csv", wait=FALSE))
+      system(paste("python3 PVN/PVN.py ", input$csvfile$datapath, " ", "InputFiles/RawMS_ProteinMatrix_noTranspose.csv", " ", "pData_mir5a6.txt",wait=FALSE))
       # NORMALIZATION check with boxplot
       #Need to change following code to take in Protein Normalization instead of VSN Normalization
      

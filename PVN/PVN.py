@@ -9,11 +9,9 @@ import pandas as pd
 import argparse
 import math
 
-#deltaFile=sys.argv[1]
-#proteinMatrix=sys.argv[2]
-deltaFile='201006L_SAM07386_BY81_YG291_TF_pH_no_normalization_PSMs_wt-split_dead-split_Imputed_missForest_DET_Corrected.csv'
-proteinMatrix='RawMS_ProteinMatrix_noTranspose.csv'
-replChannels='pData_mir5a6.txt'
+deltaFile=sys.argv[1]
+proteinMatrix=sys.argv[2]
+replChannels=sys.argv[3]
 
 def readDeltamz(infile):
 	DeltaPandas=pd.read_csv(infile)
@@ -29,8 +27,8 @@ def readReplicatesChannels(infile):
 	    channel=[]
 	    group=[]
 	    for row in file:
-	    	channel.append(row[0].split(',')[0])
-	    	group.append(row[0].split(',')[1])
+	    	channel.append(row[0])
+	    	group.append(row[1])
 	myfile.close()
 	return channel,group
 
@@ -130,42 +128,44 @@ def main():
 	dictProtein={}
 
 	for protein in protMatrix:
-		controlGroups=[]
-		treatmentGroups=[]
-		formatKey=protein[0].replace('.','-')
-		i=1
-		while i<len(groups):
-			if groups[i]=='0':
-				controlGroups.append([float(protein[i]),pMatrix[i][:-1]])
-			elif groups[i]=='1':
-				treatmentGroups.append([float(protein[i]),pMatrix[i][:-1]])
-			i+=1
-		try:
-			controlReps=[]
-			controlPeps=[]
-			for controlAbundance in controlGroups:
-				controlReps.append(controlAbundance[0])
-				controlPeps.append(controlAbundance[1])
-			controlNormalized=[]
-			i=0
-			while i<len(controlPeps):
-				controlNormalized.append(applyNormalization(controlReps[i], controlReps, applyVariance(controlPeps[i],dFile[formatKey])))
-				i+=1
+		if all([protein[0] != 'TreatmentGroup', protein[0] != 'Channel']):
+			#print(protein)
 			controlGroups=[]
-			treatmentReps=[]
-			treatmentPeps=[]
-			for treatmentAbundance in treatmentGroups:
-				treatmentReps.append(treatmentAbundance[0])
-				treatmentPeps.append(treatmentAbundance[1])
-			treatmentNormalized=[]
-			j=0
-			while j<len(treatmentPeps):
-				treatmentNormalized.append(applyNormalization(treatmentReps[j], treatmentReps, applyVariance(treatmentPeps[j],dFile[formatKey])))
-				j+=1
 			treatmentGroups=[]
-			dictProtein[formatKey]=[controlNormalized,treatmentNormalized]
-		except KeyError as entry:
-			pass
+			formatKey=protein[0].replace('.','-')
+			i=1
+			while i<len(groups):
+				if groups[i]=='0':
+					controlGroups.append([float(protein[i]),pMatrix[i][:-1]])
+				elif groups[i]=='1':
+					treatmentGroups.append([float(protein[i]),pMatrix[i][:-1]])
+				i+=1
+			try:
+				controlReps=[]
+				controlPeps=[]
+				for controlAbundance in controlGroups:
+					controlReps.append(controlAbundance[0])
+					controlPeps.append(controlAbundance[1])
+				controlNormalized=[]
+				i=0
+				while i<len(controlPeps):
+					controlNormalized.append(applyNormalization(controlReps[i], controlReps, applyVariance(controlPeps[i],dFile[formatKey])))
+					i+=1
+				controlGroups=[]
+				treatmentReps=[]
+				treatmentPeps=[]
+				for treatmentAbundance in treatmentGroups:
+					treatmentReps.append(treatmentAbundance[0])
+					treatmentPeps.append(treatmentAbundance[1])
+				treatmentNormalized=[]
+				j=0
+				while j<len(treatmentPeps):
+					treatmentNormalized.append(applyNormalization(treatmentReps[j], treatmentReps, applyVariance(treatmentPeps[j],dFile[formatKey])))
+					j+=1
+				treatmentGroups=[]
+				dictProtein[formatKey]=[controlNormalized,treatmentNormalized]
+			except KeyError as entry:
+				pass
 		writeFile(dictProtein, groups[1:], pChannel)
 		writeFilePMatrixTranspose(dictProtein, groups[1:], pChannel)
 		writeFilePNormMatrix(dictProtein, groups, pChannel)
