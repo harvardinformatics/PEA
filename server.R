@@ -58,14 +58,10 @@ PEApackage <- shinyServer(function(input, output, session) {
       accPSM <- as.integer(grep("Master.Protein.Accessions", colnames(psmfile.df)))-1
       accProt <- as.integer(grep("Accession", colnames(protfile.df)))-1
       
-      system(paste("python3 ProteinFilter/match.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name,  wait=FALSE))
+      system(paste("python3 ProteinFilter/proteinFilter.py ", input$PSMfile$datapath, " ", input$Protfile$datapath, " ", accPSM, " ", accProt, " ", input$PSMfile$name,  wait=FALSE))
       
     })
-    dataFrame <- reactive({
-      #X11.options(width=5, height=5, xpos=1200, ypos=500)
-      #options(editor="/usr/bin/vim")
-      #options(stringsAsFactors=FALSE)
-      
+    observeEvent(input$proteinVectorNormalization, {
       source('functions_for_proteomics_Rcode.R')
       
       # LOAD DATA
@@ -153,7 +149,6 @@ PEApackage <- shinyServer(function(input, output, session) {
        
         return(df)
       })
-      #write.table(xresmir5a6.df, "xresmir5a6_shinyapp_matrix.csv", sep=",")
       xresmir5a6.df <- do.call(rbind, mir5a6.lst)
 
       resmir5a6.df <- aggregate(xresmir5a6.df[-1], xresmir5a6.df[1], sum) # aggregating! maybe not?
@@ -218,7 +213,7 @@ PEApackage <- shinyServer(function(input, output, session) {
             x <- paste(x, as.integer(input$channel134C), sep=',')
           } 
         })
-        write.table(bm.cnames, file=paste('InputFiles/pData_', suff, '.txt', sep=''), col.names=paste('TreatmentGroup', sep=','),
+        write.table(bm.cnames, file=paste('InputFiles/pData_', suff, '.txt', sep=''), col.names=paste("TreatmentGroup", sep=','),
                     row.names=FALSE, quote=FALSE)
         
         return(list(bm, fdf))
@@ -233,15 +228,13 @@ PEApackage <- shinyServer(function(input, output, session) {
       resmir5a6.mss <- makeBlkMSS(resmir5a6.lst, 'mir5a6')
       transpose.r <- as.data.frame(t(resmir5a6.mss))
       write.table(resmir5a6.mss, "InputFiles/RawMS_ProteinMatrix_noTranspose.csv", sep=",", row.names=FALSE)
-
-      system(paste("python3 PVN/PVN.py ", input$csvfile$datapath, " ", "InputFiles/RawMS_ProteinMatrix_noTranspose.csv", " ", "pData_mir5a6.txt",wait=FALSE))
-      # NORMALIZATION check with boxplot
-      #Need to change following code to take in Protein Normalization instead of VSN Normalization
-     
       write.table(transpose.r, "Figures/RawMS_ProteinMatrix.csv", sep=",", row.names=TRUE)
-
+      system(paste("python3 PVN/PVN.py ", input$csvfile$datapath, " ", "InputFiles/RawMS_ProteinMatrix_noTranspose.csv", " ", "InputFiles/pData_mir5a6.txt",wait=FALSE))
+    })
+      
+      dataFrame <- reactive({
+          
       # NORMALIZATION check with boxplot
-      #change file name
       pn.df <- read.csv("InputFiles/ProteinNormalization_matrix_box.csv", sep=',', header=FALSE)
       pn.df <- melt(pn.df)
       pn.df['variable'] <- NULL
@@ -268,7 +261,7 @@ PEApackage <- shinyServer(function(input, output, session) {
       dev.off()
       
       
-      pn_norm_matrix.df <- read.csv("ProteinNormalization_matrix.csv", sep=',')
+      pn_norm_matrix.df <- read.csv("InputFiles/ProteinNormalization_matrix.csv", sep=',')
       group <- factor(pn_norm_matrix.df$TreatmentGroups)
       design <- model.matrix(~0+group)
       colnames(design) <- c('Ctrl', 'Transgn')
