@@ -231,8 +231,8 @@ PEApackage <- shinyServer(function(input, output, session) {
       write.table(transpose.r, "Figures/RawMS_ProteinMatrix.csv", sep=",", row.names=TRUE)
       system(paste("python3 PVN/PVN.py ", input$csvfile$datapath, " ", "InputFiles/RawMS_ProteinMatrix_noTranspose.csv", " ", "InputFiles/pData_mir5a6.txt",wait=FALSE))
     })
+      observeEvent (input$analytics, {
       
-      dataFrame <- reactive({
           
       # NORMALIZATION check with boxplot
       pn.df <- read.csv("InputFiles/ProteinNormalization_matrix_box.csv", sep=',', header=FALSE)
@@ -250,9 +250,10 @@ PEApackage <- shinyServer(function(input, output, session) {
       
       #change file name
       pn_matrix.df <- read.csv("InputFiles/ProteinNormalization_matrix_transpose.csv", sep=',', row.names = 'Protein')
-      pca <- prcomp(pn_matrix.df[2:length(pn_matrix.df)], scale=FALSE)
+      pca <- prcomp(pn_matrix.df[1:length(pn_matrix.df)], scale=FALSE)
       df <- as.data.frame(pca$rotation[, 1:4])
-      df <- namerows(df, col.name='Samples')
+      df <- namerows(df, col.name='Repl')
+      df <- df %>% separate(Repl, c('Samples', 'Replicates'))
       #MetaEDIT.df <- read.table('PCA_matrix.csv', header=TRUE,quote='\"', sep=',', comment.char='')
       
       p <- ggplot(df, aes(PC1, PC2, colour=Samples)) + geom_point(size=4) + scale_color_manual(values=wes_palette(n=3, name="Darjeeling1")) + ggtitle("Protein Normalization, Test")
@@ -262,7 +263,7 @@ PEApackage <- shinyServer(function(input, output, session) {
       
       
       pn_norm_matrix.df <- read.csv("InputFiles/ProteinNormalization_matrix.csv", sep=',')
-      group <- factor(pn_norm_matrix.df$TreatmentGroups)
+      group <- factor(pn_norm_matrix.df$TreatmentGroup)
       design <- model.matrix(~0+group)
       colnames(design) <- c('Ctrl', 'Transgn')
       fit <- lmFit(pn_matrix.df, design)
@@ -272,7 +273,7 @@ PEApackage <- shinyServer(function(input, output, session) {
       fit2 <- eBayes(fit2)
 
 
-
+      dataFrame <- reactive({
       ttUp.df <- topTable(fit2, number=Inf, sort.by ='p', p.value=1)[, c(1, 4, 5)]
       #write.table(ttUp.df, "up_fit2ebayes_shinyapp_matrix.csv", sep=",")
       ttUp.df$symbol <- unlist(mget(rownames(ttUp.df), uniprotmir5a62sym, ifnotfound=rownames(ttUp.df)))
@@ -300,12 +301,12 @@ PEApackage <- shinyServer(function(input, output, session) {
         tt.df
 
 
-    })
-
+      })
+    
     dataFilter <- reactive({
       dataFrame()[dataFrame()$logFC > input$fcCut[1] & dataFrame()$logFC < input$fcCut[2],]
     })
-
+    
     output$volcanoPlot <- renderPlot({
 
         highlight_df <- dataFilter() %>%
@@ -314,23 +315,19 @@ PEApackage <- shinyServer(function(input, output, session) {
           filter(logFC<=-1)
         highlight_df_up <- dataFilter() %>%
           filter(logFC>=1)
+        
         ggplot(dataFilter(),aes(x=logFC,y=logPval)) + geom_point(size=2, alpha=1, col='black') +
-        labs(title=input$plottitle, x=input$xaxis, y=input$yaxis) +
-        theme_update(plot.title=element_text(hjust=0.5), legend.position='none') +
-        geom_point(data=dataFilter(), stat='identity', aes(colour=cut(logFC, c(-Inf,-1,1,5))), size=1) + geom_hline(yintercept=-log(0.05,10), linetype="3313", colour="grey") + geom_vline(xintercept=1, linetype="3313", colour="grey") + geom_vline(xintercept=-1, linetype="3313", colour="grey") +
+          labs(title=input$plottitle, x=input$xaxis, y=input$yaxis) +
+          theme_update(plot.title=element_text(hjust=0.5), legend.position='none') +
+          geom_point(data=dataFilter(), stat='identity', aes(colour=cut(logFC, c(-Inf,-1,1,100))), size=1) + geom_hline(yintercept=-log(0.05,10), linetype="3313", colour="grey") + geom_vline(xintercept=1, linetype="3313", colour="grey") + geom_vline(xintercept=-1, linetype="3313", colour="grey") +
           scale_color_manual(name = "logFC",
                              values = c("(-Inf,-1]" = "blue",
                                         "(-1,1]" = "gray",
-                                        "(1,5]" = "red"),
+                                        "(1,100]" = "red"),
                              labels = c("decreased", "insignificant", "increased")) +
-        geom_point(data=highlight_df, aes(x=logFC,y=logPval), color='green',size=2,alpha=1, col='black') +
-        #geom_text_repel(data=highlight_df, aes(x=logFC, y=logPval, label=highlight_df$symbol), colour='forestgreen', size=2) +
-        #geom_text_repel(data=highlight_df_down, aes(x=logFC, y=logPval, label=highlight_df_down$symbol), colour='black', size=2) +
-        #geom_text_repel(data=highlight_df_up, aes(x=logFC, y=logPval, label=highlight_df_up$symbol), colour='black', size=2) +
-        theme_classic()
-
-
+          theme_classic()
     })
+
 
     plotOutput <- reactive({
 
@@ -344,11 +341,11 @@ PEApackage <- shinyServer(function(input, output, session) {
       ggplot(dataFilter(),aes(x=logFC,y=logPval)) + geom_point(size=2, alpha=1, col='black') +
         labs(title=input$plottitle, x=input$xaxis, y=input$yaxis) +
         theme_update(plot.title=element_text(hjust=0.5), legend.position='none') +
-        geom_point(data=dataFilter(), stat='identity', aes(colour=cut(logFC, c(-Inf,-1,1,5))), size=1) + geom_hline(yintercept=-log(0.05,10), linetype="3313", colour="grey") + geom_vline(xintercept=1, linetype="3313", colour="grey") + geom_vline(xintercept=-1, linetype="3313", colour="grey") +
+        geom_point(data=dataFilter(), stat='identity', aes(colour=cut(logFC, c(-Inf,-1,1,100))), size=1) + geom_hline(yintercept=-log(0.05,10), linetype="3313", colour="grey") + geom_vline(xintercept=1, linetype="3313", colour="grey") + geom_vline(xintercept=-1, linetype="3313", colour="grey") +
         scale_color_manual(name = "logFC",
                            values = c("(-Inf,-1]" = "blue",
                                       "(-1,1]" = "gray",
-                                      "(1,5]" = "red"),
+                                      "(1,100]" = "red"),
                            labels = c("decreased", "insignificant", "increased")) +
         geom_point(data=highlight_df, aes(x=logFC,y=logPval,label=symbol), color='green',size=2, alpha=1, col='black') +
         #geom_text_repel(data=highlight_df, aes(x=logFC, y=logPval, label=highlight_df$symbol), colour='forestgreen', size=2) +
@@ -375,7 +372,7 @@ PEApackage <- shinyServer(function(input, output, session) {
     output$clickedPoints <- renderTable({
       clicked()
     }, rownames = T)
-
+  })
 })
 
 
