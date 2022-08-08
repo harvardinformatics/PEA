@@ -11,3 +11,23 @@ Author: Alexandria DSouza [aut, cre],
 Description: Written in Python and R - allows user to impute missing data using a variety of algorithms, and then estimate differential abundance on the corrected matrix. The proteomics matrix is computed in Python using the model of choice among missForest, KNN or RegImpute from the missingpy and StaticImpute libraries. All PCA and Volcano plots are generated in R using Shiny.
 License: `use_gpl3_license()`
 Encoding: UTF-8
+Imports:
+	MSnbase,
+	reshape,
+	lattice,
+	ggplot2,
+	limma,
+	ROTS,
+	stringr,
+	seqinr,
+	ggrepel,
+	MKmisc,
+	gplots,
+	gtools,
+	magick,
+	mwshiny,
+	dplyr,
+	tidyr,
+	pca3d,
+	wesanderson
+Liense: GNU
