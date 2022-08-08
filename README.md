@@ -14,5 +14,6 @@ PEA starts out by generating a new matrix based on a percentage matrix and a cho
 After methods are applied for calculating and adjusting missing data in TMT Proteomics data, the file is further filtered with protein FDR confidence is high, unique peptides greater than 2, master proteins only, and no contaminants. Some of the graphs and tables produced include PCA plots, Volcano plots, and tables including all the statistics presented in the graphs. Applied here is a VSN normalization computed on the imputed matrix using a robust variant of the maximum-likelihood estimator for an additive-multiplicative error model and affine calibration. The model incorporates dependence of the variance on the mean intensity and a variance stabilizing data transformation. A linear model is fitted to the expression data for control and treatment, then t-statistics are computed by empirical Bayes moderation of standard errors towards a common value.
 
 Installation of Python3, R, and RStudio is required.
-Python libraries can be installed via pip install -r requirements.txt, while R libraries can be installed via RStudio.
-Follow the Bioconductor commands to install MSnbase and ROTS.
+Python libraries can be installed via pip install -r requirements.txt.
+R Libraries and App can be installed and loaded with command,
+devtools::install_github("https://github.com/harvardinformatics/PEA")
