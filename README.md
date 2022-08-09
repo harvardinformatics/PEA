@@ -15,5 +15,4 @@ After methods are applied for calculating and adjusting missing data in TMT Prot
 
 Installation of Python3, R, and RStudio is required.
 Python libraries can be installed via pip install -r requirements.txt.
-R Libraries and App can be installed and loaded with command,
-devtools::install_github("https://github.com/harvardinformatics/PEA")
+R Libraries and App can be installed and loaded with the devtools github install command.
