@@ -11,7 +11,7 @@ library(ROTS)
 library(stringr)
 library(seqinr)
 library(ggrepel)
-library(MKmisc) # glog2
+library(MKmisc)
 library(gplots)
 library(gtools)
 library(magick)
@@ -23,6 +23,7 @@ library(wesanderson)
 
 
 PEApackage <- shinyServer(function(input, output, session) {
+    #Applying different Imputation Methods, for Missing Values
     observeEvent(input$runimputation1, {
       impute.df <- read.csv(input$psmfilename$datapath, header=TRUE)
       startAbundance <- as.integer(grep(paste(input$abundancecolumn,"$",sep=''), colnames(impute.df)))-1
@@ -44,6 +45,7 @@ PEApackage <- shinyServer(function(input, output, session) {
       system(paste("python3 ImputationMethods/RegImpute_model.py ", input$psmfilename$datapath, " ", input$replicatenum1, " ", startAbundance, " ", input$replicatenum2, " ", input$psmfilename$name,  wait=FALSE))
       
     })
+    #Applying a Bias Corrector, towards PSM Matrix
     observeEvent(input$runDETcorrector, {
       impute.df <- read.csv(input$psmfilenameDET$datapath, header=TRUE)
       startAbundance <- as.integer(grep(paste(input$abundancecolumnDET,"$",sep=''), colnames(impute.df)))-1
@@ -51,6 +53,7 @@ PEApackage <- shinyServer(function(input, output, session) {
       system(paste("python3 DET/DETcorrector.py ", input$psmfilenameDET$datapath, " ", input$replicatenum1DET, " ", startAbundance, " ", input$replicatenum2DET, " ", input$psmfilenameDET$name,  wait=FALSE))
       
     })
+    #Applying Protein Filters
     observeEvent(input$runPDfilter, {
       
       psmfile.df <- read.csv(input$PSMfile$datapath, header=TRUE)
@@ -64,8 +67,7 @@ PEApackage <- shinyServer(function(input, output, session) {
     observeEvent(input$proteinVectorNormalization, {
       source('functions_for_proteomics_Rcode.R')
       
-      # LOAD DATA
-      #CHANGE input file name
+      #Uploading the input PSM File.
       inFile<-input$csvfile
       if (is.null(inFile))
         return(NULL)
@@ -85,17 +87,11 @@ PEApackage <- shinyServer(function(input, output, session) {
         args <- parser$parse_args()
       }
       
-      
-      # annotation
-      #annotmir5a6.df <- xmir5a6.df[, c(as.integer(input$peptideCol), as.integer(input$accessionCol))]
+      #Importing Uniprot Libraries
       annotmir5a6.df <- xmir5a6.df[, c(as.integer(grep("Annotated.Sequence", colnames(xmir5a6.df))), as.integer(grep("Master.Protein.Accessions", colnames(xmir5a6.df))))]
-      #write.table(annotmir5a6.df, "annotmir5a6_matrix.csv", sep=",")
       colnames(annotmir5a6.df) <- c('Pept', 'Acc')
       annotmir5a6.df$Acc <- as.character(sapply(annotmir5a6.df$Acc, function(x) unlist(strsplit(x, split=';'))[1]))
-      #annotmir5a6.df$Acc <- as.character(annotmir5a6.df$Acc)
       annotmir5a6.df <- annotmir5a6.df[!is.na(annotmir5a6.df$Acc), ]
-      #write.table(annotmir5a6.df, "annotmir5a6_matrix.csv", sep=",")
-      # lookup
       pepseqmir5a62acc <- new.env(hash=TRUE)
       apply(annotmir5a6.df, 1, function(x) {
         pepseqmir5a62acc[[x[1]]] <- x[2]
@@ -108,7 +104,7 @@ PEApackage <- shinyServer(function(input, output, session) {
       if (is.null(uprot2))
         return(NULL)
       write.table(unique(annotmir5a6.df$Acc), uprot1$datapath, quote=FALSE, sep=',', row.names=FALSE, col.names=FALSE)
-      # download annotation from UniProt
+
       uniprot2genename.df <- read.table(uprot2$datapath, header=FALSE, sep=',', quote='')
       uniprotmir5a62sym <- new.env(hash=TRUE)
       apply(uniprot2genename.df, 1, function(x) {
@@ -121,7 +117,7 @@ PEApackage <- shinyServer(function(input, output, session) {
       
       abunum.v <- which(colnames(xmir5a6.df) %in% matchesAb)
       
-      
+      #Applying Isolation Interference
       isolint <- as.integer(grep("^Isolation.Interference", colnames(xmir5a6.df)))
       outfile <- input$outputfile
       pcaCtl <- input$pcacontrol
@@ -132,7 +128,7 @@ PEApackage <- shinyServer(function(input, output, session) {
       ymir5a6.lst <- separate_PDPSM(mir5a6.df, 2)
       xmir5a6.lst <- rmAnyMissing(ymir5a6.lst)
 
-      # add protein column
+      #Apply Uniprot Protein Name, Accession
       mir5a6.lst <- lapply(xmir5a6.lst, function(df) {
         rownames(df) <- make.unique(df$PepSeq, sep=';')    
         df$Prot <- as.character(unlist(mget(df$PepSeq, pepseqmir5a62acc, ifnotfound=NA)))
@@ -151,7 +147,7 @@ PEApackage <- shinyServer(function(input, output, session) {
       })
       xresmir5a6.df <- do.call(rbind, mir5a6.lst)
 
-      resmir5a6.df <- aggregate(xresmir5a6.df[-1], xresmir5a6.df[1], sum) # aggregating! maybe not?
+      resmir5a6.df <- aggregate(xresmir5a6.df[-1], xresmir5a6.df[1], sum)
       if (input$protnorm != 'NA'){
         xx<-ncol(resmir5a6.df)
         prot_matrix <- resmir5a6.df[, 2:xx]
@@ -159,11 +155,9 @@ PEApackage <- shinyServer(function(input, output, session) {
        
         np <- norm_prot[2:xx]
         resmir5a6.df[, 2:xx] <- mapply('/', prot_matrix, np)
-        
-        
       }
 
-      # MAKE MSnbase OBJECT
+      #Assigning appropriate channels to Protein Matrix
       prepBlkAnnot <- function(df, suff) {
         adf <- df
         adf <- adf[order(adf$Prot, decreasing=FALSE), ]
@@ -229,12 +223,13 @@ PEApackage <- shinyServer(function(input, output, session) {
       transpose.r <- as.data.frame(t(resmir5a6.mss))
       write.table(resmir5a6.mss, "InputFiles/RawMS_ProteinMatrix_noTranspose.csv", sep=",", row.names=FALSE)
       write.table(transpose.r, "Figures/RawMS_ProteinMatrix.csv", sep=",", row.names=TRUE)
+      
+      #Perform Protein Vector Normalization Methods.
       system(paste("python3 PVN/PVN.py ", input$csvfile$datapath, " ", "InputFiles/RawMS_ProteinMatrix_noTranspose.csv", " ", "InputFiles/pData_mir5a6.txt",wait=FALSE))
     })
       observeEvent (input$analytics, {
       
-          
-      # NORMALIZATION check with boxplot
+      #Upload Protein Matrix for Normalizaed Box Plot
       pn.df <- read.csv("InputFiles/ProteinNormalization_matrix_box.csv", sep=',', header=FALSE)
       pn.df <- melt(pn.df)
       pn.df['variable'] <- NULL
@@ -245,23 +240,20 @@ PEApackage <- shinyServer(function(input, output, session) {
       tiff(paste("Figures/NormalizationBoxPlot.tiff"), width = 4, height = 4, units = 'in', res=600)
       plot(p)
       dev.off()
-      
-      
-      
-      #change file name
+
+      #upload PCA matrix for computation
       pn_matrix.df <- read.csv("InputFiles/ProteinNormalization_matrix_transpose.csv", sep=',', row.names = 'Protein')
       pca <- prcomp(pn_matrix.df[1:length(pn_matrix.df)], scale=FALSE)
       df <- as.data.frame(pca$rotation[, 1:4])
       df <- namerows(df, col.name='Repl')
       df <- df %>% separate(Repl, c('Samples', 'Replicates'))
-      #MetaEDIT.df <- read.table('PCA_matrix.csv', header=TRUE,quote='\"', sep=',', comment.char='')
       
       p <- ggplot(df, aes(PC1, PC2, colour=Samples)) + geom_point(size=4) + scale_color_manual(values=wes_palette(n=3, name="Darjeeling1")) + ggtitle("Protein Normalization, Test")
       tiff("Figures/PCAPlot.tiff", width = 6, height = 8, units = 'in', res=600)
       plot(p)
       dev.off()
       
-      
+      #upload PVN matrix
       pn_norm_matrix.df <- read.csv("InputFiles/ProteinNormalization_matrix.csv", sep=',')
       group <- factor(pn_norm_matrix.df$TreatmentGroup)
       design <- model.matrix(~0+group)
@@ -275,7 +267,6 @@ PEApackage <- shinyServer(function(input, output, session) {
 
       dataFrame <- reactive({
       ttUp.df <- topTable(fit2, number=Inf, sort.by ='p', p.value=1)[, c(1, 4, 5)]
-      #write.table(ttUp.df, "up_fit2ebayes_shinyapp_matrix.csv", sep=",")
       ttUp.df$symbol <- unlist(mget(rownames(ttUp.df), uniprotmir5a62sym, ifnotfound=rownames(ttUp.df)))
       ttUp.df$FC <- ifelse(ttUp.df$logFC >= 0, inv.glog2(ttUp.df$logFC), -inv.glog2(-ttUp.df$logFC))
       ttUp.df$logPval <- -log10(ttUp.df[,c(2)])
@@ -328,10 +319,7 @@ PEApackage <- shinyServer(function(input, output, session) {
           theme_classic()
     })
 
-
     plotOutput <- reactive({
-
-
       highlight_df <- dataFilter() %>%
         filter(symbol==input$protint)
       highlight_df_down <- dataFilter() %>%
@@ -348,27 +336,19 @@ PEApackage <- shinyServer(function(input, output, session) {
                                       "(1,100]" = "red"),
                            labels = c("decreased", "insignificant", "increased")) +
         geom_point(data=highlight_df, aes(x=logFC,y=logPval,label=symbol), color='green',size=2, alpha=1, col='black') +
-        #geom_text_repel(data=highlight_df, aes(x=logFC, y=logPval, label=highlight_df$symbol), colour='forestgreen', size=2) +
-        #geom_text_repel(data=highlight_df_down, aes(x=logFC, y=logPval, label=highlight_df_down$symbol), colour='black', size=2) +
-        #geom_text_repel(data=highlight_df_up, aes(x=logFC, y=logPval, label=highlight_df_up$symbol), colour='black', size=2) +
         theme_classic()
 
-
     })
-
-
     observeEvent(input$downloadPlot, {
         ggsave(paste("Figures/VolcanoPlot.png"),plotOutput(), width = 8, height = 4, dpi=600)
       })
 
-
-
     clicked <- reactive({
-      # We need to tell it what the x and y variables are:
+      #assigning x and y variables to the interactive volcano plot
       nearPoints(dataFilter(), input$plot_click, xvar = "logFC", yvar = "logPval")
     })
 
-    #output those points into a table
+    #output those points into interactive table
     output$clickedPoints <- renderTable({
       clicked()
     }, rownames = T)
