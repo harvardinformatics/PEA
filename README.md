@@ -1,12 +1,12 @@
 # PEA: A Proteomics Expression Analysis, Application
 
 ## Table of Contents
-* [Introduction](#introduction)
-* [Installation](#installation)
-* [Imputation](#imputation)
-* [DET Corrector](#detcorrector)
-* [Protein Vector Normalization](#pvn)
-* [Data Analytics](#dataanalytics)
+* [Introduction](https://github.com/harvardinformatics/PEA#introduction)
+* [Installation](https://github.com/harvardinformatics/PEA#installation)
+* [Imputation](https://github.com/harvardinformatics/PEA#imputation)
+* [DET Corrector](https://github.com/harvardinformatics/PEA#detcorrector)
+* [Protein Vector Normalization](https://github.com/harvardinformatics/PEA#pvn)
+* [Data Analytics](https://github.com/harvardinformatics/PEA#dataanalytics)
 <br><br>
 
 ## Introduction <a name="introduction"></a>
