@@ -1,9 +1,9 @@
-# PEA
+# PEA: A Proteomics Expression Analysis, Application
 
 ## Table of Contents
 * [Introduction](#introduction)
 * [Installation](#installation)
-* [Imputation](#immputation)
+* [Imputation](#imputation)
 * [DET Corrector](#detcorrector)
 * [Protein Vector Normalization](#pvn)
 * [Data Analytics](#dataanalytics)
