@@ -8,12 +8,15 @@ import re
 import numpy as np
 import argparse
 
-begCol=int(sys.argv[3])
-midCol=int(int(sys.argv[3])+(int(sys.argv[2])))
-endCol=midCol+int(sys.argv[4])
-reps=int(sys.argv[2])
-reps2=int(sys.argv[4])
-name=sys.argv[5].split('.')[0]
+detCoef=list(sys.argv[2])
+expCoef=list(sys.argv[3])
+techCoef=list(sys.argv[4])
+begCol=int(sys.argv[6])
+midCol=int(int(sys.argv[6])+(int(sys.argv[5])))
+endCol=midCol+int(sys.argv[7])
+reps=int(sys.argv[5])
+reps2=int(sys.argv[7])
+name=sys.argv[8].split('.')[0]
 
 fileName=sys.argv[1]
 
@@ -43,7 +46,7 @@ def Detection(x, a, b, c, d, E):
 	return a*(x**4)+b*(x**3)+c*(x**2)+d*x+E 
 
 def writeFile(infile, DataMatrix):
-	fn = infile + '_DET_Corrected.csv'
+	fn = 'InputFiles/' + infile + '_DET_Corrected.csv'
 	with open(fn, 'w', newline="") as myfile:
 	    outputFile = csv.writer(myfile)
 	    i=0
@@ -70,18 +73,18 @@ def main():
 	while i<len(dataTrt):
 		dataTrt[i]=[float(a) for a in dataTrt[i]]
 		dataCtl[i]=[float(a) for a in dataCtl[i]]
-		yTech_Trt=Technical(np.mean(dataTrt[i]),5.67,4.26,3.82,2)/10**9
-		yExp_Trt=Experimental(np.mean(dataTrt[i]),3.5,4.2,5.67,3.4)/10**9
-		yDet_Trt=Detection(np.mean(dataTrt[i]),4.7,2.3,5.4,4.6,2.3)/10**13
+		yTech_Trt=Technical(np.mean(dataTrt[i]),float(techCoef[0]),float(techCoef[1]),float(techCoef[2]),float(techCoef[3]))/10**9
+		yExp_Trt=Experimental(np.mean(dataTrt[i]),float(expCoef[0]),float(expCoef[1]),float(expCoef[2]),float(expCoef[3]))/10**9
+		yDet_Trt=Detection(np.mean(dataTrt[i]),float(detCoef[0]),float(detCoef[1]),float(detCoef[2]),float(detCoef[3]),float(detCoef[4]))/10**13
 		yT_Trt.append(yTech_Trt)
 		TechnicalScore_Trt=np.mean(dataTrt[i])/yTech_Trt
 		yE_Trt.append(yExp_Trt)
 		ExperimentalScore_Trt=np.mean(dataTrt[i])/yExp_Trt
 		yD_Trt.append(yDet_Trt)
 		DetectionScore_Trt=np.mean(dataTrt[i])/yDet_Trt
-		yTech_Ctl=Technical(np.mean(dataCtl[i]),5.67,4.26,3.82,2)/10**9
-		yExp_Ctl=Experimental(np.mean(dataCtl[i]),3.5,4.2,5.67,3.4)/10**9
-		yDet_Ctl=Detection(np.mean(dataCtl[i]),4.7,2.3,5.4,4.6,2.3)/10**13
+		yTech_Ctl=Technical(np.mean(dataCtl[i]),float(techCoef[0]),float(techCoef[1]),float(techCoef[2]),float(techCoef[3]))/10**9
+		yExp_Ctl=Experimental(np.mean(dataCtl[i]),float(expCoef[0]),float(expCoef[1]),float(expCoef[2]),float(expCoef[3]))/10**9
+		yDet_Ctl=Detection(np.mean(dataCtl[i]),float(detCoef[0]),float(detCoef[1]),float(detCoef[2]),float(detCoef[3]),float(detCoef[4]))/10**13
 		yT_Ctl.append(yTech_Ctl)
 		TechnicalScore_Ctl=np.mean(dataCtl[i])/yTech_Ctl
 		yE_Ctl.append(yExp_Ctl)
@@ -94,6 +97,7 @@ def main():
 		dataMatrix[i][midCol:endCol]=dataCtl[i]
 		i+=1
 	writeFile(name, dataMatrix)
+	print('Your DET Corrected file has been output.')
 
 	# arrayOpt, arrayCov = curve_fit(Technical, dataJm, dataJs)
 	# print(arrayOpt)

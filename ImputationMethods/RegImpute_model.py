@@ -90,7 +90,7 @@ def blankDecider(pmatrix, bmatrix, imatrix):
 
 def writeFile(infile, currData, annotData):
 	cData = currData.tolist()
-	fn = name + '_Imputed_RegImpute.csv'
+	fn = 'InputFiles/' + name + '_Imputed_RegImpute.csv'
 	with open(fn, 'w', newline="") as myfile:
 	    outputFile = csv.writer(myfile)
 	    outputFile.writerow(firstRow)

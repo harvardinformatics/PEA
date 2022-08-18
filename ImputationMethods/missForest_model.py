@@ -91,7 +91,7 @@ def blankDecider(pmatrix, bmatrix, imatrix):
 def writeFile(infile, currData, annotData):
 
 	cData = currData.tolist()
-	fn = name + '_Imputed_missForest.csv'
+	fn = 'InputFiles/' + name + '_Imputed_missForest.csv'
 	
 	with open(fn, 'w', newline="") as myfile:
 	    outputFile = csv.writer(myfile)

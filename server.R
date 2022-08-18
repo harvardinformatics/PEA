@@ -50,7 +50,7 @@ PEApackage <- shinyServer(function(input, output, session) {
       impute.df <- read.csv(input$psmfilenameDET$datapath, header=TRUE)
       startAbundance <- as.integer(grep(paste(input$abundancecolumnDET,"$",sep=''), colnames(impute.df)))-1
       
-      system(paste("python3 DET/DETcorrector.py ", input$psmfilenameDET$datapath, " ", input$replicatenum1DET, " ", startAbundance, " ", input$replicatenum2DET, " ", input$psmfilenameDET$name,  wait=FALSE))
+      system(paste("python3 DET/DETcorrector.py ", input$psmfilenameDET$datapath, " ", input$detectionError," ", input$experimentalError," ", input$technicalError," ",input$replicatenum1DET, " ", startAbundance, " ", input$replicatenum2DET, " ", input$psmfilenameDET$name,  wait=FALSE))
       
     })
     #Applying Protein Filters

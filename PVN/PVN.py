@@ -26,9 +26,15 @@ def readReplicatesChannels(infile):
 	    file = csv.reader(myfile)
 	    channel=[]
 	    group=[]
+	    channel.append("Channel")
+	    group.append("TreatmentGroup")
 	    for row in file:
-	    	channel.append(row[0])
-	    	group.append(row[1])
+	    	if "TreatmentGroup" in row:
+	    		pass
+	    	else:
+	    		channel.append(row[0])
+	    		group.append(row[1])
+
 	myfile.close()
 	return channel,group
 
@@ -49,7 +55,7 @@ def applyNormalization(Abundance, replArray, varianceArray):
 	return abs(math.log(Abundance/abs(np.var(replArray)-np.var(varianceArray[1])), 2))
 
 def writeFile(DataMatrix, group, Channel):
-	fn = 'PVN_ProteinNormalization_matrix_formatting.csv'
+	fn = 'InputFiles/PVN_ProteinNormalization_matrix_formatting.csv'
 	#Need to add Channel Description
 	with open(fn, 'w', newline="") as myfile:
 	    outputFile = csv.writer(myfile)
@@ -59,7 +65,7 @@ def writeFile(DataMatrix, group, Channel):
 	    outputFile.writerows([Channel])
 
 def writeFilePMatrixTranspose(DataMatrix, group, Channel):
-	fn = 'ProteinNormalization_matrix_transpose.csv'
+	fn = 'InputFiles/ProteinNormalization_matrix_transpose.csv'
 	#Need to add Channel Description
 	with open(fn, 'w', newline="") as myfile:
 	    outputFile = csv.writer(myfile)
@@ -81,7 +87,7 @@ def writeFilePMatrixTranspose(DataMatrix, group, Channel):
 
 
 def writeFilePNormMatrix(DataMatrix, group, Channel):
-	fn = 'ProteinNormalization_matrix.csv'
+	fn = 'InputFiles/ProteinNormalization_matrix.csv'
 	#Need to add Channel Description
 	with open(fn, 'w', newline="") as myfile:
 	    outputFile = csv.writer(myfile)
@@ -98,7 +104,7 @@ def writeFilePNormMatrix(DataMatrix, group, Channel):
 	    	i+=1
 
 def writeFilePNormMatrixBox(DataMatrix, group, Channel):
-	fn = 'ProteinNormalization_matrix_box.csv'
+	fn = 'InputFiles/ProteinNormalization_matrix_box.csv'
 	#Need to add Channel Description
 	with open(fn, 'w', newline="") as myfile:
 	    outputFile = csv.writer(myfile)
@@ -170,6 +176,8 @@ def main():
 		writeFilePMatrixTranspose(dictProtein, groups[1:], pChannel)
 		writeFilePNormMatrix(dictProtein, groups, pChannel)
 		writeFilePNormMatrixBox(dictProtein, groups, pChannel)
+		print("Protein Vector Normalization Complete.")
+
 
 if __name__=="__main__":
 	main()
