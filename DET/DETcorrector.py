@@ -8,9 +8,9 @@ import re
 import numpy as np
 import argparse
 
-detCoef=list(sys.argv[2])
-expCoef=list(sys.argv[3])
-techCoef=list(sys.argv[4])
+detCoef=sys.argv[2].split(',')
+expCoef=sys.argv[3].split(',')
+techCoef=sys.argv[4].split(',')
 begCol=int(sys.argv[6])
 midCol=int(int(sys.argv[6])+(int(sys.argv[5])))
 endCol=midCol+int(sys.argv[7])
